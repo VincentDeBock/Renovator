@@ -24,14 +24,15 @@ Vincent and Karo. Built to get an MVP live fast while staying scalable.
 
 - `projects`: one renovation for now, structured for many. Holds `budget`, the
   single project-level budget target shown as the Budget summary card.
+- `versions`: named, colored inclusion-sets per project (the V1/V2/V3 tabs). Lets
+  you compare renovation scenarios that share the same line items.
 - `entries`: ONE self-referencing table for both sections and items.
   `type` is 'section' (parent_id null) or 'item' (parent_id points at a section).
-  Each row has `included` (the Y/N toggle), `position` (drag-and-drop ordering),
-  and the three rollup amounts: `raming`, `offertes`, `facturen`.
-  Totals roll up: item amounts sum to their section, sections sum to the project.
-  Only rows where `included = true` count toward totals.
-  (The legacy per-row `entries.budget` column still exists but is unused — budget
-  moved to the project level.)
+  Each row has `version_ids uuid[]` (which versions it belongs to),
+  `position` (drag-and-drop ordering), and the three rollup amounts: `raming`,
+  `offertes`, `facturen`. Totals roll up per version: a row counts in a version
+  only when its id is in `version_ids` (section AND item membership both matter).
+  (Legacy unused columns: `entries.included` and `entries.budget`.)
 - `files`: metadata; binaries go in Supabase Storage.
 - `audit_log` and `comments`: schema exists from Phase 0, surfaced in Phase 4.
 
@@ -48,6 +49,12 @@ Vincent and Karo. Built to get an MVP live fast while staying scalable.
   Settings page (`src/components/Settings.jsx`); App.jsx now owns project + entries
   state and switches between Overzicht and Settings. Budget column removed from the
   table. Needs `supabase/project_budget.sql` run once.
+- Versions (DONE): project version tabs (V1/V2/V3/+) backed by shared line items
+  and per-row `version_ids` membership. The table's Y/N toggle, rollups and cards
+  are scoped to the active version; a comparison strip shows each version's
+  Offertes vs budget. Tabs in `src/components/VersionTabs.jsx`, comparison in
+  `VersionCompare.jsx`, version-aware math in `src/lib/totals.js`. Needs
+  `supabase/project_versions.sql` run once.
 - Phase 3 (NEXT): file upload and an in-app viewer (images native, PDFs via pdf.js).
 - Phase 4: Supabase auth (just the two users), audit trail, comments. Replace the
   permissive RLS policies with authenticated-user policies.

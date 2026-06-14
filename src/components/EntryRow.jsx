@@ -2,13 +2,20 @@ import { useSortable } from '@dnd-kit/sortable'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import EditableCell from './EditableCell'
-import { ROLLUP_FIELDS, sectionAmounts } from '../lib/totals'
+import { ROLLUP_FIELDS, sectionAmounts, memberOf } from '../lib/totals'
 import { formatEuro } from '../lib/format'
 
 const COLUMN_LABELS = {
   raming: 'Raming',
   offertes: 'Offertes',
   facturen: 'Facturen',
+}
+
+// New membership array after toggling the active version on/off for a row.
+function toggledMembership(row, versionId, on) {
+  const current = Array.isArray(row.version_ids) ? row.version_ids : []
+  if (on) return current.includes(versionId) ? current : [...current, versionId]
+  return current.filter((id) => id !== versionId)
 }
 
 function DragHandle({ attributes, listeners }) {
@@ -25,36 +32,34 @@ function DragHandle({ attributes, listeners }) {
   )
 }
 
-function IncludeToggle({ included, onChange, label }) {
+function IncludeToggle({ checked, color, onChange, label }) {
   return (
     <label className="toggle" aria-label={label}>
-      <input
-        type="checkbox"
-        checked={included}
-        onChange={(e) => onChange(e.target.checked)}
-      />
-      <span className="toggle-track" aria-hidden="true">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span
+        className="toggle-track"
+        aria-hidden="true"
+        style={checked && color ? { background: color } : undefined}
+      >
         <span className="toggle-thumb" />
       </span>
-      <span className="toggle-text">{included ? 'Ja' : 'Nee'}</span>
+      <span className="toggle-text">{checked ? 'Ja' : 'Nee'}</span>
     </label>
   )
 }
 
-function ItemRow({ item, onUpdateItem, onDeleteItem }) {
+function ItemRow({ item, activeVersionId, activeColor, onUpdateItem, onDeleteItem }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: item.id, data: { type: 'item', parentId: item.parent_id } })
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
+  const style = { transform: CSS.Transform.toString(transform), transition }
+  const inVersion = (item.version_ids ?? []).includes(activeVersionId)
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`row row--item grid ${!item.included ? 'row--off' : ''} ${
+      className={`row row--item grid ${!inVersion ? 'row--off' : ''} ${
         isDragging ? 'row--dragging' : ''
       }`}
     >
@@ -82,11 +87,14 @@ function ItemRow({ item, onUpdateItem, onDeleteItem }) {
         </div>
       ))}
 
-      <div className="cell cell--incl" data-label="Meetellen">
+      <div className="cell cell--incl" data-label="In versie">
         <IncludeToggle
-          included={item.included}
-          label={`Item ${item.name || ''} meetellen`}
-          onChange={(included) => onUpdateItem(item.id, { included })}
+          checked={inVersion}
+          color={activeColor}
+          label={`Item ${item.name || ''} in deze versie`}
+          onChange={(on) =>
+            onUpdateItem(item.id, { version_ids: toggledMembership(item, activeVersionId, on) })
+          }
         />
       </div>
 
@@ -106,8 +114,11 @@ function ItemRow({ item, onUpdateItem, onDeleteItem }) {
 }
 
 // One section plus its items. Both the section and its items are drag-sortable.
+// The include toggle and rollups are scoped to the active version.
 export default function SectionGroup({
   section,
+  activeVersionId,
+  activeColor,
   onUpdate,
   onDelete,
   onAddItem,
@@ -117,22 +128,19 @@ export default function SectionGroup({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: section.id, data: { type: 'section' } })
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
+  const style = { transform: CSS.Transform.toString(transform), transition }
 
   const items = section.items ?? []
   const itemIds = items.map((i) => i.id)
   const hasItems = items.length > 0
-  const rollup = sectionAmounts(section)
-  const dimmed = !section.included
+  const rollup = sectionAmounts(section, memberOf(activeVersionId))
+  const inVersion = (section.version_ids ?? []).includes(activeVersionId)
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`group ${dimmed ? 'group--off' : ''} ${
+      className={`group ${!inVersion ? 'group--off' : ''} ${
         isDragging ? 'group--dragging' : ''
       }`}
     >
@@ -154,7 +162,7 @@ export default function SectionGroup({
         {ROLLUP_FIELDS.map((field) => (
           <div key={field} className="cell cell--amount" data-label={COLUMN_LABELS[field]}>
             {hasItems ? (
-              <span className="amount-rollup" title="Som van de items">
+              <span className="amount-rollup" title="Som van de items in deze versie">
                 {formatEuro(rollup[field])}
               </span>
             ) : (
@@ -168,11 +176,14 @@ export default function SectionGroup({
           </div>
         ))}
 
-        <div className="cell cell--incl" data-label="Meetellen">
+        <div className="cell cell--incl" data-label="In versie">
           <IncludeToggle
-            included={section.included}
-            label={`Sectie ${section.name || ''} meetellen`}
-            onChange={(included) => onUpdate(section.id, { included })}
+            checked={inVersion}
+            color={activeColor}
+            label={`Sectie ${section.name || ''} in deze versie`}
+            onChange={(on) =>
+              onUpdate(section.id, { version_ids: toggledMembership(section, activeVersionId, on) })
+            }
           />
         </div>
 
@@ -195,6 +206,8 @@ export default function SectionGroup({
           <ItemRow
             key={item.id}
             item={item}
+            activeVersionId={activeVersionId}
+            activeColor={activeColor}
             onUpdateItem={onUpdateItem}
             onDeleteItem={onDeleteItem}
           />

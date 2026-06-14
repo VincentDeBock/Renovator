@@ -670,6 +670,158 @@ body {
   cursor: default;
 }
 
+/* ---- Version tabs --------------------------------------------------------- */
+.vtabs {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 16px 24px 0;
+}
+.vtabs-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.vtabs-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.vtab {
+  --vcolor: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 12px 12px 0 0;
+  background: color-mix(in srgb, var(--vcolor) 22%, #fff);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-bottom: none;
+  min-height: 44px;
+  user-select: none;
+  transition: background 0.12s, transform 0.12s;
+}
+.vtab:hover {
+  background: color-mix(in srgb, var(--vcolor) 34%, #fff);
+}
+.vtab--active {
+  background: var(--vcolor);
+  color: #10241f;
+  box-shadow: 0 -2px 10px rgba(16, 24, 40, 0.08);
+}
+.vtab-name {
+  pointer-events: none;
+}
+.vtab-input {
+  font: inherit;
+  font-weight: 700;
+  width: 70px;
+  border: none;
+  border-radius: 6px;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--ink);
+}
+.vtab-input:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+}
+.vtab-del {
+  border: none;
+  background: rgba(255, 255, 255, 0.45);
+  color: var(--ink);
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  line-height: 1;
+  font-size: 15px;
+  cursor: pointer;
+}
+.vtab-del:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+.vtab--add {
+  background: var(--card);
+  color: var(--muted);
+  font-size: 20px;
+  padding: 10px 16px;
+}
+.vtab--add:hover {
+  background: var(--row-hover);
+  color: var(--ink);
+}
+
+/* The active version's colored chip in the table header / elsewhere */
+.vchip {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #10241f;
+}
+
+/* ---- Version comparison strip --------------------------------------------- */
+.vcompare {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 16px 20px;
+  margin-bottom: 28px;
+}
+.vcompare-title {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--faint);
+}
+.vcompare-rows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+}
+.vcompare-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.vcompare-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  color: #10241f;
+}
+.vcompare-amount {
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.vcompare-delta {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.vcompare-delta--over {
+  color: var(--err);
+}
+.vcompare-delta--under {
+  color: var(--ok);
+}
+
 /* ---- App bar + navigation ------------------------------------------------- */
 .appbar {
   max-width: 1080px;
@@ -760,6 +912,11 @@ body {
   font-size: 14px;
 }
 
+.app-banner {
+  max-width: 1080px;
+  margin: 16px auto 0;
+}
+
 @media (max-width: 760px) {
   .appbar {
     padding: 16px 14px 0;
@@ -772,5 +929,11 @@ body {
   }
   .settings {
     padding: 16px 14px;
+  }
+  .vtabs {
+    padding: 16px 14px 0;
+  }
+  .app-banner {
+    margin: 16px 14px 0;
   }
 }

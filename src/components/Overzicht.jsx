@@ -15,7 +15,8 @@ import {
 } from '@dnd-kit/sortable'
 import SummaryCards from './SummaryCards'
 import SectionGroup from './EntryRow'
-import { buildTree, projectTotals, ROLLUP_FIELDS } from '../lib/totals'
+import VersionCompare from './VersionCompare'
+import { buildTree, projectTotals, memberOf, ROLLUP_FIELDS } from '../lib/totals'
 import { formatEuro } from '../lib/format'
 import {
   makeEntry,
@@ -31,15 +32,20 @@ const COLUMN_LABELS = {
   facturen: 'Facturen',
 }
 
-// entries + setEntries are owned by App so the data survives a trip to Settings.
-export default function Overzicht({ project, entries, setEntries }) {
+// entries + setEntries are owned by App so the data survives a trip to Settings
+// and is shared with the version controls.
+export default function Overzicht({ project, entries, setEntries, versions, activeVersionId }) {
   const [error, setError] = useState(null)
 
   const sections = useMemo(() => buildTree(entries), [entries])
-  const totals = useMemo(() => projectTotals(sections), [sections])
+  const isActive = useMemo(() => memberOf(activeVersionId), [activeVersionId])
+  const totals = useMemo(() => projectTotals(sections, isActive), [sections, isActive])
   const sectionIds = useMemo(() => sections.map((s) => s.id), [sections])
 
-  // A small drag threshold so taps on inline-edit cells aren't read as drags.
+  const activeVersion = versions.find((v) => v.id === activeVersionId) || null
+  const activeColor = activeVersion?.color || null
+  const allVersionIds = useMemo(() => versions.map((v) => v.id), [versions])
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -70,6 +76,7 @@ export default function Overzicht({ project, entries, setEntries }) {
       type: 'section',
       position: nextPosition((e) => e.type === 'section'),
       name: '',
+      versionIds: allVersionIds,
     })
     const snapshot = entries
     setEntries((rows) => [...rows, row])
@@ -89,6 +96,7 @@ export default function Overzicht({ project, entries, setEntries }) {
       parentId: sectionId,
       position: nextPosition((e) => e.type === 'item' && e.parent_id === sectionId),
       name: '',
+      versionIds: allVersionIds,
     })
     const snapshot = entries
     setEntries((rows) => [...rows, row])
@@ -112,7 +120,6 @@ export default function Overzicht({ project, entries, setEntries }) {
     }
   }
 
-  // Persist a new sibling order as positions 0..n, optimistically.
   async function persistOrder(orderedIds) {
     const snapshot = entries
     const posById = new Map(orderedIds.map((id, i) => [id, i]))
@@ -142,7 +149,6 @@ export default function Overzicht({ project, entries, setEntries }) {
 
     if (type === 'item') {
       const parentId = active.data.current?.parentId
-      // Only reorder within the same section (no cross-section moves for now).
       if (over.data.current?.parentId !== parentId) return
       const section = sections.find((s) => s.id === parentId)
       if (!section) return
@@ -167,6 +173,8 @@ export default function Overzicht({ project, entries, setEntries }) {
 
       <SummaryCards totals={totals} budget={project.budget} />
 
+      <VersionCompare versions={versions} sections={sections} budget={project.budget} />
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -181,7 +189,15 @@ export default function Overzicht({ project, entries, setEntries }) {
                 {COLUMN_LABELS[f]}
               </div>
             ))}
-            <div className="cell cell--incl">Meetellen</div>
+            <div className="cell cell--incl">
+              {activeVersion ? (
+                <span className="vchip" style={{ background: activeColor || '#94a3b8' }}>
+                  {activeVersion.name}
+                </span>
+              ) : (
+                'Versie'
+              )}
+            </div>
             <div className="cell cell--actions" aria-hidden="true" />
           </div>
 
@@ -194,6 +210,8 @@ export default function Overzicht({ project, entries, setEntries }) {
               <SectionGroup
                 key={section.id}
                 section={section}
+                activeVersionId={activeVersionId}
+                activeColor={activeColor}
                 onUpdate={patchEntry}
                 onDelete={removeEntry}
                 onAddItem={addItem}

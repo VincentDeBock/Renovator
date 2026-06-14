@@ -12,6 +12,24 @@ export function formatEuro(value) {
   return euro.format(n)
 }
 
+// Compact euro for the comparison cards: €300K, €11K, €1.5K, or €500 below 1000.
+export function formatEuroCompact(value) {
+  const n = Math.round(Number(value) || 0)
+  if (Math.abs(n) >= 1000) return `€${trimK(n / 1000)}K`
+  return `€${n}`
+}
+
+// Signed delta in thousands, e.g. +50K, -12K, +0K (matches the requested card).
+export function formatDeltaK(value) {
+  const n = Math.round(Number(value) || 0)
+  const sign = n < 0 ? '-' : '+'
+  return `${sign}${trimK(Math.abs(n) / 1000)}K`
+}
+
+function trimK(k) {
+  return Number.isInteger(k) ? String(k) : k.toFixed(1)
+}
+
 // Parse user input ("1.234,56", "1234.56", "€ 1 200") into a plain number.
 // Tolerant of both comma and dot decimals so editing on a phone is forgiving.
 export function parseAmount(raw) {
