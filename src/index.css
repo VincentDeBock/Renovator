@@ -670,6 +670,34 @@ body {
   cursor: default;
 }
 
+/* ---- Easter egg ----------------------------------------------------------- */
+.easter {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 9999;
+}
+.easter-text {
+  font-size: clamp(36px, 9vw, 96px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  text-shadow: 0 4px 24px rgba(16, 24, 40, 0.25);
+  animation: easter-pop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+@keyframes easter-pop {
+  from {
+    transform: scale(0.4) rotate(-6deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}
+
 /* ---- Version tabs --------------------------------------------------------- */
 .vtabs {
   max-width: 1080px;
