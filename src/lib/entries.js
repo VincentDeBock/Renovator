@@ -2,7 +2,7 @@
 // components stay declarative and this stays the single place to test/replace.
 
 import { supabase } from './supabase'
-import { AMOUNT_FIELDS } from './totals'
+import { ROLLUP_FIELDS } from './totals'
 
 // Load the seeded project (Phase 1 has exactly one).
 export async function getProject() {
@@ -75,11 +75,40 @@ export async function deleteEntry(id) {
   if (error) throw error
 }
 
+// Persist new positions after a drag-and-drop reorder. `updates` is an array of
+// { id, position }. Runs the writes in parallel and throws on the first failure.
+export async function updatePositions(updates) {
+  const results = await Promise.all(
+    updates.map(({ id, position }) =>
+      supabase.from('entries').update({ position }).eq('id', id),
+    ),
+  )
+  const failed = results.find((r) => r.error)
+  if (failed) throw failed.error
+}
+
+// Update project-level fields (currently the name and the budget target).
+export async function updateProject(id, patch) {
+  const clean = {}
+  if ('name' in patch) clean.name = String(patch.name ?? '')
+  if ('budget' in patch) clean.budget = Number(patch.budget) || 0
+
+  const { data, error } = await supabase
+    .from('projects')
+    .update(clean)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
 // Guard the write surface: only known columns, amounts coerced to numbers.
 function sanitizePatch(patch) {
   const out = {}
   for (const [key, value] of Object.entries(patch)) {
-    if (AMOUNT_FIELDS.includes(key)) {
+    if (ROLLUP_FIELDS.includes(key)) {
       out[key] = Number(value) || 0
     } else if (key === 'name') {
       out[key] = String(value ?? '')

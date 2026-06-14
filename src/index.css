@@ -147,7 +147,7 @@ body {
 
 .grid {
   display: grid;
-  grid-template-columns: minmax(0, 2.2fr) repeat(4, minmax(0, 1fr)) 104px 40px;
+  grid-template-columns: 28px minmax(0, 2.2fr) repeat(3, minmax(0, 1fr)) 104px 36px;
   align-items: center;
   gap: 8px;
   padding: 6px 16px;
@@ -195,6 +195,42 @@ body {
 
 .cell {
   min-width: 0;
+}
+.cell--drag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Drag handle + dragging states */
+.drag-handle {
+  background: none;
+  border: none;
+  color: var(--faint);
+  cursor: grab;
+  padding: 6px 4px;
+  font-size: 16px;
+  line-height: 1;
+  border-radius: 6px;
+  touch-action: none; /* let dnd-kit own the gesture on touch */
+}
+.drag-handle:hover {
+  color: var(--ink);
+  background: var(--row-hover);
+}
+.drag-handle:active {
+  cursor: grabbing;
+}
+.row--dragging,
+.group--dragging {
+  position: relative;
+  z-index: 5;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(16, 24, 40, 0.14);
+  border-radius: 10px;
+}
+.group--dragging {
+  opacity: 0.97;
 }
 .cell--amount {
   text-align: right;
@@ -632,4 +668,109 @@ body {
 .login-submit:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+/* ---- App bar + navigation ------------------------------------------------- */
+.appbar {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 20px 24px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.appbar-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.appnav {
+  display: flex;
+  gap: 4px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 4px;
+}
+.navtab {
+  background: none;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  min-height: 40px;
+}
+.navtab:hover {
+  color: var(--ink);
+}
+.navtab--active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ---- Settings page -------------------------------------------------------- */
+.settings {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 24px;
+}
+.settings-header h1 {
+  margin: 0;
+  font-size: 26px;
+  letter-spacing: -0.01em;
+}
+.settings-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 24px;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.settings-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.settings-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.settings-actions .btn-add-section {
+  margin-top: 0;
+}
+.settings-ok {
+  color: var(--ok);
+  font-weight: 600;
+  font-size: 14px;
+}
+.settings-err {
+  color: var(--err);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+@media (max-width: 760px) {
+  .appbar {
+    padding: 16px 14px 0;
+  }
+  .appnav {
+    width: 100%;
+  }
+  .navtab {
+    flex: 1;
+  }
+  .settings {
+    padding: 16px 14px;
+  }
 }

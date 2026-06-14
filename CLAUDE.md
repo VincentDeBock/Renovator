@@ -22,13 +22,16 @@ Vincent and Karo. Built to get an MVP live fast while staying scalable.
 
 ## Data model (see supabase/schema.sql)
 
-- `projects`: one renovation for now, structured for many.
+- `projects`: one renovation for now, structured for many. Holds `budget`, the
+  single project-level budget target shown as the Budget summary card.
 - `entries`: ONE self-referencing table for both sections and items.
   `type` is 'section' (parent_id null) or 'item' (parent_id points at a section).
   Each row has `included` (the Y/N toggle), `position` (drag-and-drop ordering),
-  and four amounts: `raming`, `budget`, `offertes`, `facturen`.
+  and the three rollup amounts: `raming`, `offertes`, `facturen`.
   Totals roll up: item amounts sum to their section, sections sum to the project.
   Only rows where `included = true` count toward totals.
+  (The legacy per-row `entries.budget` column still exists but is unused — budget
+  moved to the project level.)
 - `files`: metadata; binaries go in Supabase Storage.
 - `audit_log` and `comments`: schema exists from Phase 0, surfaced in Phase 4.
 
@@ -39,9 +42,13 @@ Vincent and Karo. Built to get an MVP live fast while staying scalable.
   the four amounts and the Y/N toggle, live totals rolling up from item to section
   to project, inline click-to-edit on every number and name, optimistic writes to
   Supabase. Data layer in `src/lib/entries.js`, pure rollups in `src/lib/totals.js`.
-- Phase 2 (NEXT): drag-and-drop reordering (use the `position` field), add and delete
-  with no limit on count.
-- Phase 3: file upload and an in-app viewer (images native, PDFs via pdf.js).
+- Phase 2 (DONE): drag-and-drop reordering of sections and items via dnd-kit
+  (handles + `position`, persisted in `src/lib/entries.js#updatePositions`; items
+  reorder within their section). Budget became a project-level target set on a new
+  Settings page (`src/components/Settings.jsx`); App.jsx now owns project + entries
+  state and switches between Overzicht and Settings. Budget column removed from the
+  table. Needs `supabase/project_budget.sql` run once.
+- Phase 3 (NEXT): file upload and an in-app viewer (images native, PDFs via pdf.js).
 - Phase 4: Supabase auth (just the two users), audit trail, comments. Replace the
   permissive RLS policies with authenticated-user policies.
 

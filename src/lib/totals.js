@@ -4,11 +4,15 @@
 //  - A section's amounts are the sum of its items' amounts.
 //  - A section with no items can hold amounts directly.
 //  - Only rows with included = true count toward section and project totals.
+//
+// Budget is NOT in here: it is a single project-level target (projects.budget),
+// set on the Settings page, not a per-row amount. The fields that roll up are
+// raming, offertes and facturen.
 
-export const AMOUNT_FIELDS = ['raming', 'budget', 'offertes', 'facturen']
+export const ROLLUP_FIELDS = ['raming', 'offertes', 'facturen']
 
 const zeroAmounts = () =>
-  AMOUNT_FIELDS.reduce((acc, f) => ((acc[f] = 0), acc), {})
+  ROLLUP_FIELDS.reduce((acc, f) => ((acc[f] = 0), acc), {})
 
 // Split a flat entries array into sections, each carrying its ordered items.
 export function buildTree(entries) {
@@ -43,7 +47,7 @@ export function sectionAmounts(section) {
   }
   return section.items.reduce((acc, item) => {
     if (item.included) {
-      for (const f of AMOUNT_FIELDS) acc[f] += Number(item[f]) || 0
+      for (const f of ROLLUP_FIELDS) acc[f] += Number(item[f]) || 0
     }
     return acc
   }, zeroAmounts())
@@ -59,13 +63,13 @@ export function sectionContribution(section) {
 export function projectTotals(sections) {
   return sections.reduce((acc, section) => {
     const contrib = sectionContribution(section)
-    for (const f of AMOUNT_FIELDS) acc[f] += contrib[f]
+    for (const f of ROLLUP_FIELDS) acc[f] += contrib[f]
     return acc
   }, zeroAmounts())
 }
 
 function pickAmounts(row) {
-  return AMOUNT_FIELDS.reduce((acc, f) => {
+  return ROLLUP_FIELDS.reduce((acc, f) => {
     acc[f] = Number(row[f]) || 0
     return acc
   }, {})
