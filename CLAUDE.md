@@ -34,14 +34,13 @@ Vincent and Karo. Built to get an MVP live fast while staying scalable.
 
 ## Roadmap and current state
 
-- Phase 0 (DONE): scaffold, schema, deploy pipeline. The app currently shows only a
-  Supabase connection check.
-- Phase 1 (NEXT): build the Overzicht budget table. Sections containing items, each
-  with the four amounts and the Y/N toggle, live totals rolling up from item to
-  section to project, inline click-to-edit on every number and name. Persist all
-  edits to Supabase. No auth, no drag-and-drop, no files yet.
-- Phase 2: drag-and-drop reordering (use the `position` field), add and delete with
-  no limit on count.
+- Phase 0 (DONE): scaffold, schema, deploy pipeline.
+- Phase 1 (DONE): the Overzicht budget table. Sections containing items, each with
+  the four amounts and the Y/N toggle, live totals rolling up from item to section
+  to project, inline click-to-edit on every number and name, optimistic writes to
+  Supabase. Data layer in `src/lib/entries.js`, pure rollups in `src/lib/totals.js`.
+- Phase 2 (NEXT): drag-and-drop reordering (use the `position` field), add and delete
+  with no limit on count.
 - Phase 3: file upload and an in-app viewer (images native, PDFs via pdf.js).
 - Phase 4: Supabase auth (just the two users), audit trail, comments. Replace the
   permissive RLS policies with authenticated-user policies.
@@ -52,3 +51,13 @@ The spec wireframe (Overzicht): four summary cards on top (Budget, Raming, Offer
 Facturen as project totals), then a table with sections and indented items, columns
 for R / O / F amounts, a Y/N checkbox per row, and a TOTAL row. Numbers are
 click-to-edit inline. Mobile and desktop both need to work well.
+
+## Live environment
+
+- GitHub: https://github.com/VincentDeBock/Renovator (private), auto-deploys `main`.
+- Netlify site: `renovatorv1` → https://renovatorv1.netlify.app
+- Supabase project ref: `tsxtwwdpekkciyjyumcr` (EU region). The app reads
+  `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, set as Netlify env vars and (for
+  local `npm run dev`) in a local `.env`, which is gitignored.
+- RLS is still the permissive Phase 0 policy (anyone with URL + anon key can
+  read/write). Tighten in Phase 4; consider Netlify password protection until then.
