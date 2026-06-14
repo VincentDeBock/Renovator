@@ -59,5 +59,9 @@ click-to-edit inline. Mobile and desktop both need to work well.
 - Supabase project ref: `tsxtwwdpekkciyjyumcr` (EU region). The app reads
   `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, set as Netlify env vars and (for
   local `npm run dev`) in a local `.env`, which is gitignored.
-- RLS is still the permissive Phase 0 policy (anyone with URL + anon key can
-  read/write). Tighten in Phase 4; consider Netlify password protection until then.
+- Auth: Supabase email/password, login-only (accounts created in the dashboard).
+  Gate lives in `src/components/AuthGate.jsx`, session in `src/context/AuthContext.jsx`,
+  wrappers in `src/lib/auth.js`. App after login is unchanged.
+- RLS: `supabase/policies_auth.sql` replaces the open Phase 0 policies with
+  authenticated-only access. Once that file is run in the SQL editor, data is
+  reachable only while logged in.
