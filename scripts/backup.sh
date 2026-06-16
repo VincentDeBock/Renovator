@@ -7,13 +7,14 @@ set -euo pipefail
 #   1. cp scripts/.backup.env.example scripts/.backup.env
 #   2. Put your DB connection string in scripts/.backup.env (it is gitignored).
 #      Supabase dashboard → Project Settings → Database → Connection string →
-#      URI. Use the "Session pooler" URI (IPv4-friendly) and include your DB
-#      password.
+#      URI → "Session pooler" (IPv4-friendly), including your DB password.
 #   3. Ensure pg_dump is installed (brew install libpq).
 #   4. Run: ./scripts/backup.sh
 #
-# Output: a timestamped renovator-YYYYMMDD-HHMMSS.sql.gz in your iCloud backups
-# folder. Keeps the most recent BACKUP_KEEP dumps (default 30).
+# Note: housekeeping (pruning, counting) runs BEFORE the dump on purpose. When this
+# runs as a background launchd agent, macOS sandboxing lets it create a file in
+# iCloud but is finicky about enumerating that folder afterwards — doing the
+# enumeration first means the dump write is the last thing the job does.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="$SCRIPT_DIR/.backup.env"
@@ -39,23 +40,27 @@ if ! command -v pg_dump >/dev/null 2>&1; then
 fi
 
 mkdir -p "$DEST"
+
+# Prune old dumps first (best-effort; never fail the backup over housekeeping).
+( ls -1t "$DEST"/renovator-*.sql.gz 2>/dev/null | tail -n +"$KEEP" \
+  | while read -r f; do rm -f "$f"; done ) || true
+
 STAMP="$(date +%Y%m%d-%H%M%S)"
 OUT="$DEST/renovator-$STAMP.sql.gz"
 
 echo "Backing up Renovator DB → $OUT"
+# Judge success by pg_dump's real exit status, not the file size (iCloud can lag
+# on reporting a freshly written file's size).
+set +e
 pg_dump "$SUPABASE_DB_URL" --no-owner --no-privileges | gzip > "$OUT"
+dump_status=${PIPESTATUS[0]}
+set -e
 
-# Refuse to keep an empty/failed dump.
-if [[ ! -s "$OUT" ]]; then
-  echo "Backup produced an empty file — removing and failing." >&2
+if [[ $dump_status -ne 0 ]]; then
+  echo "pg_dump failed (status $dump_status) — removing partial file." >&2
   rm -f "$OUT"
   exit 1
 fi
 
-# Prune: keep only the newest $KEEP dumps.
-ls -1t "$DEST"/renovator-*.sql.gz 2>/dev/null | tail -n +"$((KEEP + 1))" | while read -r f; do
-  rm -f "$f"
-done
-
-COUNT="$(ls -1 "$DEST"/renovator-*.sql.gz 2>/dev/null | wc -l | tr -d ' ')"
-echo "Done. $(du -h "$OUT" | cut -f1) written; $COUNT backup(s) retained in $DEST"
+echo "Done. Backup written to $OUT"
+exit 0
