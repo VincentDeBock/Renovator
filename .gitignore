@@ -9,6 +9,10 @@ dist/
 .env.local
 .env.*.local
 
+# Backup secrets + any local DB dumps (never commit the data or DB password)
+scripts/.backup.env
+*.sql.gz
+
 # Logs
 npm-debug.log*
 *.log

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Daily automated backup via launchd. To enable:
+    cp scripts/com.renovator.backup.plist ~/Library/LaunchAgents/
+    launchctl load ~/Library/LaunchAgents/com.renovator.backup.plist
+  To disable:
+    launchctl unload ~/Library/LaunchAgents/com.renovator.backup.plist
+  Runs daily at 20:00 (catches up on next wake if the Mac was asleep). Logs to
+  /tmp/renovator-backup.log and /tmp/renovator-backup.err.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.renovator.backup</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/vincentdebock/Library/Mobile Documents/com~apple~CloudDocs/Claude/Renovator/scripts/backup.sh</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>20</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>/tmp/renovator-backup.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/renovator-backup.err</string>
+</dict>
+</plist>
