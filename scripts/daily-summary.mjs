@@ -17,7 +17,9 @@ import { createClient } from '@supabase/supabase-js'
 const here = dirname(fileURLToPath(import.meta.url))
 
 // --- config ---------------------------------------------------------------
-const LABEL = 'Verbouwing'
+// Resolved against the real Gmail labels at runtime (matches e.g. "01. Verbouwing").
+// Override with GMAIL_LABEL if the label name changes.
+const LABEL = process.env.GMAIL_LABEL || 'Verbouwing'
 const BACKFILL_DAYS = 7
 const MAX_PDF_BYTES = 10 * 1024 * 1024
 const ANTHROPIC_MODEL = 'claude-sonnet-4-6'
@@ -129,12 +131,32 @@ function gmailHeaders(token) {
   return { Authorization: `Bearer ${token}` }
 }
 
-async function listMessageIds(token, query) {
+// Resolve a label name to its id (exact match, else first name that contains it).
+async function resolveLabelId(token, name) {
+  const res = await withRetry(
+    () => fetch('https://gmail.googleapis.com/gmail/v1/users/me/labels', { headers: gmailHeaders(token) }),
+    { label: 'labels.list' },
+  )
+  const labels = (await res.json()).labels || []
+  const lc = name.toLowerCase()
+  const match =
+    labels.find((l) => (l.name || '').toLowerCase() === lc) ||
+    labels.find((l) => (l.name || '').toLowerCase().includes(lc))
+  if (!match) {
+    throw new Error(
+      `Gmail label not found matching "${name}". Available: ${labels.map((l) => l.name).join(', ')}`,
+    )
+  }
+  return { id: match.id, name: match.name }
+}
+
+async function listMessageIds(token, labelId, cursor) {
   const ids = []
   let pageToken
   do {
     const url = new URL('https://gmail.googleapis.com/gmail/v1/users/me/messages')
-    url.searchParams.set('q', query)
+    url.searchParams.set('labelIds', labelId)
+    url.searchParams.set('q', `after:${cursor}`)
     url.searchParams.set('maxResults', '100')
     if (pageToken) url.searchParams.set('pageToken', pageToken)
     const res = await withRetry(() => fetch(url, { headers: gmailHeaders(token) }), {
@@ -281,11 +303,13 @@ async function readCursor() {
 async function main() {
   const runStart = Math.floor(Date.now() / 1000)
   const cursor = await readCursor()
-  const query = `label:${LABEL} after:${cursor}`
-  console.log(`[daily-summary] cursor=${cursor} (${new Date(cursor * 1000).toISOString()}) query="${query}"`)
-
   const token = await gmailAccessToken()
-  const ids = await listMessageIds(token, query)
+  const label = await resolveLabelId(token, LABEL)
+  console.log(
+    `[daily-summary] label="${label.name}" cursor=${cursor} (${new Date(cursor * 1000).toISOString()})`,
+  )
+
+  const ids = await listMessageIds(token, label.id, cursor)
   console.log(`[daily-summary] ${ids.length} candidate message(s)`)
 
   const successes = []
