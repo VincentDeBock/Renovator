@@ -1,46 +1,24 @@
+import { Link } from 'react-router-dom'
 import { useSortable } from '@dnd-kit/sortable'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import EditableCell from './EditableCell'
-import { ROLLUP_FIELDS, sectionAmounts, memberOf } from '../lib/totals'
+import { sectionAmounts, verschil } from '../lib/totals'
 import { formatEuro } from '../lib/format'
-
-const COLUMN_LABELS = {
-  raming: 'Raming',
-  offertes: 'Offertes',
-  facturen: 'Facturen',
-}
-
-// New membership array after toggling the active version on/off for a row.
-function toggledMembership(row, versionId, on) {
-  const current = Array.isArray(row.version_ids) ? row.version_ids : []
-  if (on) return current.includes(versionId) ? current : [...current, versionId]
-  return current.filter((id) => id !== versionId)
-}
 
 function DragHandle({ attributes, listeners }) {
   return (
-    <button
-      type="button"
-      className="drag-handle"
-      aria-label="Versleep om te ordenen"
-      {...attributes}
-      {...listeners}
-    >
+    <button type="button" className="drag-handle" aria-label="Versleep om te ordenen" {...attributes} {...listeners}>
       <span aria-hidden="true">⠿</span>
     </button>
   )
 }
 
-function IncludeToggle({ checked, color, onChange, label }) {
+function IncludeToggle({ checked, onChange, label }) {
   return (
     <label className="toggle" aria-label={label}>
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-      <span
-        className="toggle-track"
-        aria-hidden="true"
-        style={checked && color ? { background: color } : undefined}
-      >
+      <span className="toggle-track" aria-hidden="true">
         <span className="toggle-thumb" />
       </span>
       <span className="toggle-text">{checked ? 'Ja' : 'Nee'}</span>
@@ -48,53 +26,59 @@ function IncludeToggle({ checked, color, onChange, label }) {
   )
 }
 
-function ItemRow({ item, activeVersionId, activeColor, onUpdateItem, onDeleteItem }) {
+function VerschilCell({ amounts }) {
+  const v = verschil(amounts)
+  return (
+    <div className="cell cell--amount" data-label="Verschil">
+      <span className={`amount-rollup ${v < 0 ? 'amount--over' : ''}`}>{formatEuro(v)}</span>
+    </div>
+  )
+}
+
+function ItemRow({ item, onUpdateItem, onRequestDelete }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: item.id, data: { type: 'item', parentId: item.parent_id } })
-
   const style = { transform: CSS.Transform.toString(transform), transition }
-  const inVersion = (item.version_ids ?? []).includes(activeVersionId)
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`row row--item grid ${!inVersion ? 'row--off' : ''} ${
-        isDragging ? 'row--dragging' : ''
-      }`}
+      className={`row row--item grid ${!item.included ? 'row--off' : ''} ${isDragging ? 'row--dragging' : ''}`}
     >
       <div className="cell cell--drag">
         <DragHandle attributes={attributes} listeners={listeners} />
       </div>
 
       <div className="cell cell--name" data-label="Item">
-        <EditableCell
-          value={item.name}
-          placeholder="Naam item"
-          ariaLabel="Naam item"
-          onSave={(name) => onUpdateItem(item.id, { name })}
-        />
+        <Link className="item-link" to={`/item/${item.id}`}>
+          {item.name?.trim() || 'Naamloos item'}
+        </Link>
       </div>
 
-      {ROLLUP_FIELDS.map((field) => (
-        <div key={field} className="cell cell--amount" data-label={COLUMN_LABELS[field]}>
-          <EditableCell
-            kind="amount"
-            value={item[field]}
-            ariaLabel={`${COLUMN_LABELS[field]} ${item.name || 'item'}`}
-            onSave={(val) => onUpdateItem(item.id, { [field]: val })}
-          />
-        </div>
-      ))}
+      <div className="cell cell--amount" data-label="Offerte">
+        <EditableCell
+          kind="amount"
+          value={item.offertes}
+          ariaLabel={`Offerte ${item.name || 'item'}`}
+          onSave={(val) => onUpdateItem(item.id, { offertes: val })}
+        />
+      </div>
+      <div className="cell cell--amount" data-label="Factuur">
+        <EditableCell
+          kind="amount"
+          value={item.facturen}
+          ariaLabel={`Factuur ${item.name || 'item'}`}
+          onSave={(val) => onUpdateItem(item.id, { facturen: val })}
+        />
+      </div>
+      <VerschilCell amounts={item} />
 
-      <div className="cell cell--incl" data-label="In versie">
+      <div className="cell cell--incl" data-label="Meetellen">
         <IncludeToggle
-          checked={inVersion}
-          color={activeColor}
-          label={`Item ${item.name || ''} in deze versie`}
-          onChange={(on) =>
-            onUpdateItem(item.id, { version_ids: toggledMembership(item, activeVersionId, on) })
-          }
+          checked={item.included}
+          label={`Item ${item.name || ''} meetellen`}
+          onChange={(on) => onUpdateItem(item.id, { included: on })}
         />
       </div>
 
@@ -104,53 +88,49 @@ function ItemRow({ item, activeVersionId, activeColor, onUpdateItem, onDeleteIte
           className="btn-icon"
           title="Item verwijderen"
           aria-label={`Item ${item.name || ''} verwijderen`}
-          onClick={() => onDeleteItem(item.id)}
+          onClick={() => onRequestDelete({ id: item.id, type: 'item', name: item.name })}
         >
-          ✕
+          🗑
         </button>
       </div>
     </div>
   )
 }
 
-// One section plus its items. Both the section and its items are drag-sortable.
-// The include toggle and rollups are scoped to the active version.
 export default function SectionGroup({
   section,
-  activeVersionId,
-  activeColor,
+  collapsed,
+  onToggleCollapse,
   onUpdate,
-  onDelete,
+  onRequestDelete,
   onAddItem,
   onUpdateItem,
-  onDeleteItem,
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: section.id, data: { type: 'section' } })
-
   const style = { transform: CSS.Transform.toString(transform), transition }
 
   const items = section.items ?? []
   const itemIds = items.map((i) => i.id)
   const hasItems = items.length > 0
-  const rollup = sectionAmounts(section, memberOf(activeVersionId))
-  const inVersion = (section.version_ids ?? []).includes(activeVersionId)
+  const rollup = sectionAmounts(section)
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`group ${!inVersion ? 'group--off' : ''} ${
-        isDragging ? 'group--dragging' : ''
-      }`}
-    >
-      {/* Section row */}
-      <div className="row row--section grid">
+    <div className={`group ${!section.included ? 'group--off' : ''} ${isDragging ? 'group--dragging' : ''}`}>
+      <div ref={setNodeRef} style={style} className="row row--section grid">
         <div className="cell cell--drag">
           <DragHandle attributes={attributes} listeners={listeners} />
         </div>
 
         <div className="cell cell--name" data-label="Sectie">
+          <button
+            type="button"
+            className={`chevron ${collapsed ? 'chevron--collapsed' : ''}`}
+            aria-label={collapsed ? 'Sectie openklappen' : 'Sectie inklappen'}
+            onClick={() => onToggleCollapse(section.id)}
+          >
+            ▾
+          </button>
           <EditableCell
             value={section.name}
             placeholder="Naam sectie"
@@ -159,31 +139,27 @@ export default function SectionGroup({
           />
         </div>
 
-        {ROLLUP_FIELDS.map((field) => (
-          <div key={field} className="cell cell--amount" data-label={COLUMN_LABELS[field]}>
-            {hasItems ? (
-              <span className="amount-rollup" title="Som van de items in deze versie">
-                {formatEuro(rollup[field])}
-              </span>
-            ) : (
-              <EditableCell
-                kind="amount"
-                value={section[field]}
-                ariaLabel={`${COLUMN_LABELS[field]} ${section.name || 'sectie'}`}
-                onSave={(val) => onUpdate(section.id, { [field]: val })}
-              />
-            )}
-          </div>
-        ))}
+        <div className="cell cell--amount" data-label="Offerte">
+          {hasItems ? (
+            <span className="amount-rollup">{formatEuro(rollup.offertes)}</span>
+          ) : (
+            <EditableCell kind="amount" value={section.offertes} ariaLabel="Offerte sectie" onSave={(v) => onUpdate(section.id, { offertes: v })} />
+          )}
+        </div>
+        <div className="cell cell--amount" data-label="Factuur">
+          {hasItems ? (
+            <span className="amount-rollup">{formatEuro(rollup.facturen)}</span>
+          ) : (
+            <EditableCell kind="amount" value={section.facturen} ariaLabel="Factuur sectie" onSave={(v) => onUpdate(section.id, { facturen: v })} />
+          )}
+        </div>
+        <VerschilCell amounts={rollup} />
 
-        <div className="cell cell--incl" data-label="In versie">
+        <div className="cell cell--incl" data-label="Meetellen">
           <IncludeToggle
-            checked={inVersion}
-            color={activeColor}
-            label={`Sectie ${section.name || ''} in deze versie`}
-            onChange={(on) =>
-              onUpdate(section.id, { version_ids: toggledMembership(section, activeVersionId, on) })
-            }
+            checked={section.included}
+            label={`Sectie ${section.name || ''} meetellen`}
+            onChange={(on) => onUpdate(section.id, { included: on })}
           />
         </div>
 
@@ -193,32 +169,28 @@ export default function SectionGroup({
             className="btn-icon"
             title="Sectie verwijderen"
             aria-label={`Sectie ${section.name || ''} verwijderen`}
-            onClick={() => onDelete(section.id)}
+            onClick={() => onRequestDelete({ id: section.id, type: 'section', name: section.name })}
           >
-            ✕
+            🗑
           </button>
         </div>
       </div>
 
-      {/* Item rows (sortable within this section) */}
-      <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-        {items.map((item) => (
-          <ItemRow
-            key={item.id}
-            item={item}
-            activeVersionId={activeVersionId}
-            activeColor={activeColor}
-            onUpdateItem={onUpdateItem}
-            onDeleteItem={onDeleteItem}
-          />
-        ))}
-      </SortableContext>
+      {!collapsed && (
+        <>
+          <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+            {items.map((item) => (
+              <ItemRow key={item.id} item={item} onUpdateItem={onUpdateItem} onRequestDelete={onRequestDelete} />
+            ))}
+          </SortableContext>
 
-      <div className="row row--additem">
-        <button type="button" className="btn-add-item" onClick={() => onAddItem(section.id)}>
-          + Item toevoegen
-        </button>
-      </div>
+          <div className="row row--additem">
+            <button type="button" className="btn-add-item" onClick={() => onAddItem(section.id)}>
+              + Item toevoegen
+            </button>
+          </div>
+        </>
+      )}
     </div>
   )
 }

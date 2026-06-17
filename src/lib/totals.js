@@ -1,28 +1,18 @@
 // Pure rollup logic, kept out of the components so it stays testable.
 //
-// Rules:
-//  - A section's amounts are the sum of its items' amounts.
-//  - A section with no items can hold amounts directly.
-//  - Only rows that are "included" count toward section and project totals.
+// Single version: only rows with included = true count toward section and project
+// totals. Sections roll up from their items; an item-less section holds amounts
+// directly. (The dormant `version_ids` column is ignored now that versions were
+// removed per the Overzicht design.)
 //
-// "Included" used to be a single boolean. It is now per-version: a row counts in a
-// version when its id is in that version's membership. Callers pass an
-// `isIncluded(entry) => bool` predicate so this stays version-agnostic.
-//
-// Budget is NOT here: it is a single project-level target (projects.budget).
-// The fields that roll up are raming, offertes and facturen.
+// Budget is a project-level target (projects.budget). Raming stays in the data but
+// is no longer shown; the Overzicht surfaces offertes, facturen and their verschil.
 
 export const ROLLUP_FIELDS = ['raming', 'offertes', 'facturen']
 
 const zeroAmounts = () =>
   ROLLUP_FIELDS.reduce((acc, f) => ((acc[f] = 0), acc), {})
 
-// Predicate factory: is this entry a member of the given version?
-export function memberOf(versionId) {
-  return (entry) => Array.isArray(entry.version_ids) && entry.version_ids.includes(versionId)
-}
-
-// Split a flat entries array into sections, each carrying its ordered items.
 export function buildTree(entries) {
   const sections = entries
     .filter((e) => e.type === 'section')
@@ -47,38 +37,36 @@ function byOrder(a, b) {
   return (a.created_at ?? '').localeCompare(b.created_at ?? '')
 }
 
-// The amounts shown on a section row: rollup of its included items, or its own
-// stored amounts when it has no items.
-export function sectionAmounts(section, isIncluded) {
+// Amounts shown on a section row: rollup of its included items, or its own stored
+// amounts when it has no items.
+export function sectionAmounts(section) {
   if (!section.items || section.items.length === 0) {
     return pickAmounts(section)
   }
   return section.items.reduce((acc, item) => {
-    if (isIncluded(item)) {
+    if (item.included) {
       for (const f of ROLLUP_FIELDS) acc[f] += Number(item[f]) || 0
     }
     return acc
   }, zeroAmounts())
 }
 
-// What a section contributes to the project totals (respects its own membership).
-export function sectionContribution(section, isIncluded) {
-  if (!isIncluded(section)) return zeroAmounts()
-  return sectionAmounts(section, isIncluded)
+export function sectionContribution(section) {
+  if (!section.included) return zeroAmounts()
+  return sectionAmounts(section)
 }
 
-// Project-level totals across every included section, for a given predicate.
-export function projectTotals(sections, isIncluded) {
+export function projectTotals(sections) {
   return sections.reduce((acc, section) => {
-    const contrib = sectionContribution(section, isIncluded)
+    const contrib = sectionContribution(section)
     for (const f of ROLLUP_FIELDS) acc[f] += contrib[f]
     return acc
   }, zeroAmounts())
 }
 
-// Convenience: totals for one version id.
-export function versionTotals(sections, versionId) {
-  return projectTotals(sections, memberOf(versionId))
+// Verschil = offerte − factuur. Negative (factuur > offerte) means overspend → red.
+export function verschil(amounts) {
+  return (Number(amounts.offertes) || 0) - (Number(amounts.facturen) || 0)
 }
 
 function pickAmounts(row) {

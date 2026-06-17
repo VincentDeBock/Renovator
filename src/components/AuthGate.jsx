@@ -1,11 +1,8 @@
 import { useAuth } from '../context/AuthContext'
 import Login from './Login'
-import AuthBar from './AuthBar'
 
-// Decides what the app shows based on the session:
-//  - still resolving -> brief loading state (no flash of Login on reload)
-//  - no user         -> Login
-//  - user            -> the existing app, unchanged, with a slim sign-out bar
+// Gate: loading → brief loading state (no login flash on reload); no user → Login;
+// user → the app. Sign-out lives in TopNav now.
 export default function AuthGate({ children }) {
   const { user, loading } = useAuth()
 
@@ -16,15 +13,6 @@ export default function AuthGate({ children }) {
       </div>
     )
   }
-
-  if (!user) {
-    return <Login />
-  }
-
-  return (
-    <>
-      <AuthBar />
-      {children}
-    </>
-  )
+  if (!user) return <Login />
+  return children
 }

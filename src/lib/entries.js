@@ -33,14 +33,7 @@ export async function getEntries(projectId) {
 // Build a full entry row in memory. The id is minted client-side so the UI can
 // render the new row instantly (optimistic) and edit it before the insert lands.
 // New rows default into every current version (count until excluded).
-export function makeEntry({
-  projectId,
-  type,
-  parentId = null,
-  name = '',
-  position = 0,
-  versionIds = [],
-}) {
+export function makeEntry({ projectId, type, parentId = null, name = '', position = 0 }) {
   return {
     id: crypto.randomUUID(),
     project_id: projectId,
@@ -48,13 +41,20 @@ export function makeEntry({
     type,
     name,
     position,
-    version_ids: versionIds,
     included: true,
+    description: '',
     raming: 0,
     budget: 0,
     offertes: 0,
     facturen: 0,
   }
+}
+
+// Load one entry by id (for the item detail page).
+export async function getEntry(id) {
+  const { data, error } = await supabase.from('entries').select('*').eq('id', id).maybeSingle()
+  if (error) throw error
+  return data
 }
 
 // Persist a row built by makeEntry. Returns the stored row.
@@ -173,7 +173,7 @@ function sanitizePatch(patch) {
   for (const [key, value] of Object.entries(patch)) {
     if (ROLLUP_FIELDS.includes(key)) {
       out[key] = Number(value) || 0
-    } else if (key === 'name') {
+    } else if (key === 'name' || key === 'description') {
       out[key] = String(value ?? '')
     } else if (key === 'included') {
       out[key] = Boolean(value)
