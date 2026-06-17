@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import EditableCell from '../components/EditableCell'
+import Icon from '../components/Icon'
 import TaskTable from '../components/TaskTable'
 import FileSection from '../components/FileSection'
 import { formatEuro } from '../lib/format'
@@ -41,9 +42,9 @@ export default function ItemDetail({ project, entries, patchEntry, profiles, cur
     <div className="page detail">
       <div className="panel">
         <div className="detail-head">
-          <Link to="/" className="back-link" aria-label="Terug">←</Link>
+          <Link to="/" className="back-link" aria-label="Terug naar overzicht"><Icon name="back" size={20} /></Link>
           <EditableCell value={entry.name} placeholder="Naam item" ariaLabel="Naam item" onSave={(name) => patchEntry(entry.id, { name })} />
-          <span className="detail-edit-hint" aria-hidden="true">✎</span>
+          <span className="detail-edit-hint" aria-hidden="true"><Icon name="pencil" size={15} /></span>
         </div>
 
         <div className="cards cards--2 detail-tiles">

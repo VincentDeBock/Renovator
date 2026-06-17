@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Icon from './Icon'
 import { formatEuro, parseAmount } from '../lib/format'
 import { getTags, createTag, updateTag, deleteTag } from '../lib/tags'
 
@@ -69,7 +70,7 @@ function TagsManager({ projectId }) {
           <div key={t.id} className="tagrow">
             <input type="color" value={t.color || DEFAULT_TAG_COLOR} onChange={(e) => recolor(t.id, e.target.value)} aria-label="Kleur" />
             <input className="tag-name" defaultValue={t.name} onBlur={(e) => e.target.value.trim() && e.target.value !== t.name && rename(t.id, e.target.value.trim())} />
-            <button type="button" className="btn-icon" title="Tag verwijderen" onClick={() => remove(t.id)}>🗑</button>
+            <button type="button" className="btn-icon" title="Tag verwijderen" onClick={() => remove(t.id)}><Icon name="trash" size={16} /></button>
           </div>
         ))}
         {tags.length === 0 && <p className="file-sub">Nog geen tags.</p>}

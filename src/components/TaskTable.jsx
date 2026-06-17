@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import EditableCell from './EditableCell'
+import Icon from './Icon'
 import { getTasks, makeTask, insertTask, updateTask, deleteTask } from '../lib/tasks'
 
 const PRIO_RANK = { high: 0, medium: 1, low: 2 }
@@ -157,7 +158,7 @@ export default function TaskTable({ projectId, entryId = null, profiles, current
               <input type="date" className="date-input" value={t.deadline || ''} onChange={(e) => patch(t.id, { deadline: e.target.value || null })} />
             </div>
             <div className="tcell tcell--act">
-              <button type="button" className="btn-icon" title="Taak verwijderen" onClick={() => remove(t.id)}>🗑</button>
+              <button type="button" className="btn-icon" title="Taak verwijderen" onClick={() => remove(t.id)}><Icon name="trash" size={16} /></button>
             </div>
           </div>
         ))}

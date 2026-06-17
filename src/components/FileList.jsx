@@ -1,4 +1,5 @@
 import EditableCell from './EditableCell'
+import Icon from './Icon'
 import { formatEuro } from '../lib/format'
 
 function fmtSize(b) {
@@ -20,7 +21,7 @@ export default function FileList({ files, onView, onUpdate, onRequestDelete }) {
       {files.map((f) => (
         <div key={f.id} className="filerow">
           <button type="button" className="filerow-main" onClick={() => onView(f)} title="Bekijken">
-            <span className="file-icon" aria-hidden="true">📄</span>
+            <span className="file-icon" aria-hidden="true"><Icon name="file" size={20} /></span>
             <span className="file-meta">
               <span className="file-name">{f.name}</span>
               <span className="file-sub">{(f.mime_type || '').split('/').pop()?.toUpperCase()} · {fmtSize(f.size_bytes)}</span>
@@ -45,8 +46,8 @@ export default function FileList({ files, onView, onUpdate, onRequestDelete }) {
           </select>
 
           <span className="file-actions">
-            <button type="button" className="btn-icon" title="Bekijken" onClick={() => onView(f)}>👁</button>
-            <button type="button" className="btn-icon" title="Verwijderen" onClick={() => onRequestDelete(f)}>🗑</button>
+            <button type="button" className="btn-icon" title="Bekijken" onClick={() => onView(f)}><Icon name="eye" size={16} /></button>
+            <button type="button" className="btn-icon" title="Verwijderen" onClick={() => onRequestDelete(f)}><Icon name="trash" size={16} /></button>
           </span>
         </div>
       ))}

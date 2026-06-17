@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import Icon from './Icon'
 
 const MAX_BYTES = 50 * 1024 * 1024 // 50MB
 
@@ -51,7 +52,7 @@ export default function FileUpload({ onUpload, accept, label = '+ Bestand toevoe
           role="button"
           tabIndex={0}
         >
-          <div className="dropzone-icon" aria-hidden="true">⬆</div>
+          <div className="dropzone-icon" aria-hidden="true"><Icon name="upload" size={28} /></div>
           <div className="dropzone-text">Sleep &amp; drop bestanden hier</div>
           <button type="button" className="btn-primary dropzone-btn" onClick={(e) => { e.stopPropagation(); inputRef.current?.click() }}>
             Bestanden kiezen

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import FileViewer from '../components/FileViewer'
+import Icon from '../components/Icon'
 import { fmtSize, fmtDate } from '../components/FileList'
 import { listFiles, setFileTags } from '../lib/files'
 import { getTags } from '../lib/tags'
@@ -89,7 +90,7 @@ export default function Documenten({ project, entries }) {
           {visible.map((f) => (
             <div key={f.id} className="docrow">
               <button type="button" className="filerow-main" onClick={() => setViewer(f)}>
-                <span className="file-icon" aria-hidden="true">📄</span>
+                <span className="file-icon" aria-hidden="true"><Icon name="file" size={20} /></span>
                 <span className="file-meta">
                   <span className="file-name">{f.name}</span>
                   <span className="file-sub">{CATEGORY_LABEL[f.category] || f.category} · {itemName(f.entry_id)} · {fmtSize(f.size_bytes)} · {fmtDate(f.uploaded_at)}</span>

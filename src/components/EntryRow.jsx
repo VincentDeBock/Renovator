@@ -3,13 +3,14 @@ import { useSortable } from '@dnd-kit/sortable'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import EditableCell from './EditableCell'
+import Icon from './Icon'
 import { sectionAmounts, verschil } from '../lib/totals'
 import { formatEuro } from '../lib/format'
 
 function DragHandle({ attributes, listeners }) {
   return (
     <button type="button" className="drag-handle" aria-label="Versleep om te ordenen" {...attributes} {...listeners}>
-      <span aria-hidden="true">⠿</span>
+      <Icon name="grip" size={16} />
     </button>
   )
 }
@@ -90,7 +91,7 @@ function ItemRow({ item, onUpdateItem, onRequestDelete }) {
           aria-label={`Item ${item.name || ''} verwijderen`}
           onClick={() => onRequestDelete({ id: item.id, type: 'item', name: item.name })}
         >
-          🗑
+          <Icon name="trash" size={16} />
         </button>
       </div>
     </div>
@@ -129,7 +130,7 @@ export default function SectionGroup({
             aria-label={collapsed ? 'Sectie openklappen' : 'Sectie inklappen'}
             onClick={() => onToggleCollapse(section.id)}
           >
-            ▾
+            <Icon name="chevron" size={16} />
           </button>
           <EditableCell
             value={section.name}
@@ -171,7 +172,7 @@ export default function SectionGroup({
             aria-label={`Sectie ${section.name || ''} verwijderen`}
             onClick={() => onRequestDelete({ id: section.id, type: 'section', name: section.name })}
           >
-            🗑
+            <Icon name="trash" size={16} />
           </button>
         </div>
       </div>

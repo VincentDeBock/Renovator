@@ -1239,3 +1239,102 @@ body {
   .doc-tags { justify-content: flex-start; }
   .cards--3, .cards--2 { grid-template-columns: 1fr; }
 }
+
+/* ===== Design polish pass: icons, controls, hierarchy, contrast =========== */
+
+/* Better label contrast (was ~2.5:1, now AA-friendly) */
+:root { --faint: #6b7280; }
+
+.icon { display: block; flex-shrink: 0; }
+
+/* Icon buttons: square, centered, 38px touch target */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  color: var(--faint);
+}
+.btn-icon:hover { background: var(--err-bg); color: var(--err); }
+.drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 34px;
+  color: var(--faint);
+}
+.chevron { display: inline-flex; align-items: center; color: var(--muted); }
+
+/* Hierarchy: titles, labels, section vs item weight */
+.panel-title { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+.card-label { color: var(--muted); }
+.row--head { color: var(--muted); }
+.row--section .cell--name .cell-display { font-weight: 700; }
+.row--item .cell--name { padding-left: 6px; }
+.item-link { font-weight: 500; }
+.subtitle { color: var(--muted); }
+
+/* Pill-styled selects (priority/status) with a custom caret */
+.prio-pill, .status-pill, .owner-select, .item-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 26px;
+  cursor: pointer;
+}
+.prio-pill, .status-pill {
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+  border: 1px solid transparent;
+  text-align: left;
+  min-height: 30px;
+  background-color: var(--off-bg);
+}
+.prio-pill--high { background-color: #fee2e2; color: #b91c1c; }
+.prio-pill--medium { background-color: #fef3c7; color: #b45309; }
+.prio-pill--low { background-color: #dcfce7; color: #15803d; }
+.status-pill { background-color: var(--row-hover); color: var(--muted); border-color: var(--line); }
+.status-pill--accepted { background-color: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+.status-pill--declined { background-color: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+
+/* Owner: clear avatar, minimal inline name dropdown */
+.owner-avatar { width: 28px; height: 28px; font-size: 12px; }
+.owner-select {
+  border: none;
+  background-color: transparent;
+  min-height: auto;
+  padding: 4px 22px 4px 4px;
+  font-weight: 600;
+  color: var(--ink);
+  max-width: 120px;
+}
+.owner-select:hover { color: var(--accent); }
+
+.dropzone-icon { color: var(--accent); display: flex; justify-content: center; }
+.dropzone-icon .icon { width: 28px; height: 28px; }
+
+/* Top nav: scrollable tab strip on small screens, clear active state */
+.topnav-links .navtab { white-space: nowrap; }
+@media (max-width: 760px) {
+  .topnav-links {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
+  }
+  .topnav-user { margin-left: auto; order: 2; }
+  .topnav-title { order: 1; }
+}
+
+/* Detail page header icon alignment */
+.back-link { display: inline-flex; align-items: center; }
+.detail-edit-hint { display: inline-flex; align-items: center; }
+
+/* File icon tint */
+.file-icon { color: var(--faint); display: inline-flex; }
