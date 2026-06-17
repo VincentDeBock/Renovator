@@ -5,6 +5,7 @@ import Overzicht from './components/Overzicht'
 import Settings from './components/Settings'
 import ToDo from './pages/ToDo'
 import Documenten from './pages/Documenten'
+import Communicatie from './pages/Communicatie'
 import ItemDetail from './pages/ItemDetail'
 import { useAuth } from './context/AuthContext'
 import {
@@ -183,6 +184,7 @@ export default function App() {
         />
         <Route path="/todo" element={<ToDo project={project} entries={entries} profiles={profiles} currentUserId={user?.id} />} />
         <Route path="/documenten" element={<Documenten project={project} entries={entries} />} />
+        <Route path="/communicatie" element={<Communicatie />} />
         <Route path="/instellingen" element={<Settings project={project} onSaveBudget={saveBudget} />} />
         <Route
           path="/item/:id"

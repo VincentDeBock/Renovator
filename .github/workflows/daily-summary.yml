@@ -1,0 +1,33 @@
+name: Daily Verbouwing email summary
+
+# 06:30 Europe/Brussels. GitHub cron is UTC-only, so this is exact during summer
+# (CEST, UTC+2 → 04:30 UTC) and one hour earlier (05:30) in winter (CET). The job is
+# cursor-based and idempotent, so the small DST drift never misses or duplicates mail.
+on:
+  schedule:
+    - cron: "30 4 * * *"
+  workflow_dispatch: {} # manual trigger for testing / on-demand runs
+
+concurrency:
+  group: daily-summary
+  cancel-in-progress: false
+
+jobs:
+  summarize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - name: Run daily summary
+        env:
+          GMAIL_CLIENT_ID: ${{ secrets.GMAIL_CLIENT_ID }}
+          GMAIL_CLIENT_SECRET: ${{ secrets.GMAIL_CLIENT_SECRET }}
+          GMAIL_REFRESH_TOKEN: ${{ secrets.GMAIL_REFRESH_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/daily-summary.mjs

@@ -57,6 +57,12 @@ const PATHS = {
       <path d="M14 2v6h6" />
     </>
   ),
+  mail: (
+    <>
+      <path d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />
+      <path d="M3 7l9 6 9-6" />
+    </>
+  ),
 }
 
 export default function Icon({ name, size = 18, className = '', strokeWidth = 2 }) {

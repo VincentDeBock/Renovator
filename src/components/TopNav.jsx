@@ -1,5 +1,6 @@
 import { NavLink, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import Icon from './Icon'
 import logo from '../assets/brand/logo.png'
 import homeIcon from '../assets/brand/nav-home.png'
 import tasksIcon from '../assets/brand/nav-tasks.png'
@@ -9,6 +10,7 @@ import settingsIcon from '../assets/brand/nav-settings.png'
 const LINKS = [
   { to: '/', label: 'Overzicht', end: true, icon: homeIcon },
   { to: '/todo', label: 'To do', icon: tasksIcon },
+  { to: '/communicatie', label: 'Communicatie', svg: 'mail' },
   { to: '/documenten', label: 'Documenten', icon: docsIcon },
   { to: '/instellingen', label: 'Instellingen', icon: settingsIcon },
 ]
@@ -30,7 +32,13 @@ export default function TopNav() {
               end={l.end}
               className={({ isActive }) => `navtab ${isActive ? 'navtab--active' : ''}`}
             >
-              <img className="navtab-icon" src={l.icon} alt="" />
+              {l.icon ? (
+                <img className="navtab-icon" src={l.icon} alt="" />
+              ) : (
+                <span className="navtab-icon navtab-icon--svg">
+                  <Icon name={l.svg} size={20} />
+                </span>
+              )}
               <span>{l.label}</span>
             </NavLink>
           ))}
