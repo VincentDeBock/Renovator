@@ -1338,3 +1338,68 @@ body {
 
 /* File icon tint */
 .file-icon { color: var(--faint); display: inline-flex; }
+
+/* ===== Overzicht visual level-up ======================================== */
+
+/* Quiet include checkbox (replaces the green switch wall) */
+.incl { display: inline-flex; align-items: center; cursor: pointer; padding: 6px; }
+.incl-input { position: absolute; opacity: 0; width: 0; height: 0; }
+.incl-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid var(--line);
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.incl-input:checked + .incl-box {
+  background: var(--accent-soft);
+  border-color: #cfe0da;
+  color: var(--accent);
+}
+.incl-input:focus-visible + .incl-box { box-shadow: 0 0 0 3px var(--accent-soft); }
+.incl:hover .incl-box { border-color: var(--muted); }
+
+/* Excluded rows are the visible exception (dim + strike), not the toggles */
+.row--off, .group--off { opacity: 0.6; }
+.row--off .cell--name .cell-display,
+.row--off .item-link { text-decoration: line-through; color: var(--muted); }
+
+/* Recessive row chrome so the numbers lead */
+.drag-handle { width: 26px; height: 30px; color: var(--faint); opacity: 0.5; }
+.drag-handle:hover { opacity: 1; color: var(--muted); background: none; }
+.cell--actions .btn-icon { width: 32px; height: 32px; color: var(--faint); }
+.cell--actions .btn-icon:hover { color: var(--err); background: var(--err-bg); }
+
+/* Section band + label weight; quieter chevron */
+.row--section { background: var(--section-bg); }
+.row--section .cell--name .cell-display { font-size: 15px; font-weight: 700; letter-spacing: 0.01em; }
+.chevron { color: var(--muted); }
+
+/* Tile budget-usage bar */
+.card-bar { height: 4px; border-radius: 999px; background: var(--line-soft); overflow: hidden; margin: 4px 0 2px; }
+.card-bar-fill { height: 100%; border-radius: 999px; background: var(--ok); }
+.card-bar--over .card-bar-fill { background: var(--err); }
+.card-bar--even .card-bar-fill { background: var(--accent); }
+
+/* Desktop-only table layout fixes (mobile keeps its stacked card reflow) */
+@media (min-width: 761px) {
+  /* Chevron + title on one centered line (was wrapping above the title) */
+  .cell--name { display: flex; align-items: center; gap: 8px; }
+  .cell--name .cell-display { width: auto; flex: 1; text-align: left; }
+  /* Item grouping rail */
+  .row--item .cell--name { padding-left: 16px; position: relative; }
+  .row--item .cell--name::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: -7px;
+    bottom: -7px;
+    width: 2px;
+    background: var(--line);
+  }
+}

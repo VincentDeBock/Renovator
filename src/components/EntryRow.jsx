@@ -17,12 +17,11 @@ function DragHandle({ attributes, listeners }) {
 
 function IncludeToggle({ checked, onChange, label }) {
   return (
-    <label className="toggle" aria-label={label}>
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-      <span className="toggle-track" aria-hidden="true">
-        <span className="toggle-thumb" />
+    <label className="incl" aria-label={label}>
+      <input className="incl-input" type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span className="incl-box" aria-hidden="true">
+        <Icon name="check" size={13} strokeWidth={3} />
       </span>
-      <span className="toggle-text">{checked ? 'Ja' : 'Nee'}</span>
     </label>
   )
 }
