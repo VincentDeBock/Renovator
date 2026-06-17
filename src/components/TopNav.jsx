@@ -1,19 +1,27 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import logo from '../assets/brand/logo.png'
+import homeIcon from '../assets/brand/nav-home.png'
+import tasksIcon from '../assets/brand/nav-tasks.png'
+import docsIcon from '../assets/brand/nav-documents.png'
+import settingsIcon from '../assets/brand/nav-settings.png'
 
 const LINKS = [
-  { to: '/', label: 'Overzicht', end: true },
-  { to: '/todo', label: 'To do' },
-  { to: '/documenten', label: 'Documenten' },
-  { to: '/instellingen', label: 'Instellingen' },
+  { to: '/', label: 'Overzicht', end: true, icon: homeIcon },
+  { to: '/todo', label: 'To do', icon: tasksIcon },
+  { to: '/documenten', label: 'Documenten', icon: docsIcon },
+  { to: '/instellingen', label: 'Instellingen', icon: settingsIcon },
 ]
 
-export default function TopNav({ projectName }) {
+export default function TopNav() {
   const { displayName, signOut } = useAuth()
   return (
     <header className="topnav">
       <div className="topnav-inner">
-        <span className="topnav-title">{projectName}</span>
+        <Link to="/" className="topnav-brand" aria-label="RenovAI — naar overzicht">
+          <img className="topnav-logo" src={logo} alt="" />
+          <span className="topnav-wordmark">RenovAI</span>
+        </Link>
         <nav className="topnav-links">
           {LINKS.map((l) => (
             <NavLink
@@ -22,7 +30,8 @@ export default function TopNav({ projectName }) {
               end={l.end}
               className={({ isActive }) => `navtab ${isActive ? 'navtab--active' : ''}`}
             >
-              {l.label}
+              <img className="navtab-icon" src={l.icon} alt="" />
+              <span>{l.label}</span>
             </NavLink>
           ))}
         </nav>
