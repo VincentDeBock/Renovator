@@ -1416,3 +1416,25 @@ body {
     background: var(--line);
   }
 }
+
+/* ===== Mobile refinements (compact table rows, nav fit) ================== */
+@media (max-width: 760px) {
+  /* Tighter, friendlier nav so all four tabs fit without clipping */
+  .topnav-links { gap: 4px; }
+  .topnav-links .navtab { padding: 8px 10px; font-size: 14px; }
+
+  /* The column-header row is for the desktop grid only. */
+  .row--head { display: none !important; }
+
+  /* Compact item/section cards: hide drag; checkbox + trash to the top-right;
+     drop the derived Verschil row. ~3 tight lines per item instead of 5.
+     Scoped to .group so the TOTAL row keeps its normal stacked layout. */
+  .group .grid { position: relative; padding: 14px 14px; }
+  .group .cell--drag { display: none; }
+  .group .cell--name { padding-right: 76px; }
+  .group .cell--incl { position: absolute; top: 12px; right: 12px; padding: 0; }
+  .group .cell--incl::before { display: none; }
+  .group .cell--actions { position: absolute; top: 10px; right: 46px; }
+  .group .cell--amount[data-label='Verschil'] { display: none; }
+  .group .cell--amount { padding: 3px 0; }
+}

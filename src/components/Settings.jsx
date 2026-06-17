@@ -3,7 +3,7 @@ import Icon from './Icon'
 import { formatEuro, parseAmount } from '../lib/format'
 import { getTags, createTag, updateTag, deleteTag } from '../lib/tags'
 
-const DEFAULT_TAG_COLOR = '#2f6f5e'
+const DEFAULT_TAG_COLOR = '#ff7a1a'
 
 function TagsManager({ projectId }) {
   const [tags, setTags] = useState([])
