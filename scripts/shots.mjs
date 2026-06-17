@@ -40,6 +40,7 @@ if (!EMAIL || !PASSWORD) {
 const ROUTES = [
   ['overzicht', '/'],
   ['todo', '/todo'],
+  ['communicatie', '/communicatie'],
   ['documenten', '/documenten'],
   ['instellingen', '/instellingen'],
 ]
