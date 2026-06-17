@@ -216,12 +216,14 @@ const SYSTEM_RULE =
   'SUMMARIZE only. You must NEVER recommend, create, modify, imply, or perform any budget ' +
   'line item, database write, or financial action — you only report what the email and its ' +
   'attachments communicated. Extract amounts, vendors, dates and deadlines from the body AND ' +
-  'any attached PDFs. Reply with ONLY a single JSON object, no prose, no code fences.'
+  'any attached PDFs. Write "summary_text" and every "key_points" entry in DUTCH (Nederlands), ' +
+  'regardless of the email language. Keep the "category" value as one of the exact English codes. ' +
+  'Reply with ONLY a single JSON object, no prose, no code fences.'
 
 function buildPrompt({ sender, subject, date, body, attachmentNames, skippedNote }) {
   return [
-    'Summarize this renovation email. Return ONLY JSON of this exact shape:',
-    '{"category":"quote|invoice|architect|other","summary_text":"2-4 sentence plain-language summary including figures found in attached PDFs","key_points":["short strings: amounts, dates, deadlines"],"action_needed":true}',
+    'Summarize this renovation email IN DUTCH. Return ONLY JSON of this exact shape:',
+    '{"category":"quote|invoice|architect|other","summary_text":"2-4 zinnen samenvatting in het Nederlands, inclusief bedragen uit bijgevoegde PDF\'s","key_points":["korte Nederlandse punten: bedragen, data, deadlines"],"action_needed":true}',
     '',
     `From: ${sender}`,
     `Subject: ${subject}`,
