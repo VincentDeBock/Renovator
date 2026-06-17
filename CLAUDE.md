@@ -79,3 +79,22 @@ click-to-edit inline. Mobile and desktop both need to work well.
 - RLS: `supabase/policies_auth.sql` replaces the open Phase 0 policies with
   authenticated-only access. Once that file is run in the SQL editor, data is
   reachable only while logged in.
+
+## Design system (READ BEFORE ANY UI WORK)
+
+The look & feel is pinned in **`DESIGN.md`** — a warm identity (cream canvas, deep
+indigo ink, Headspace-orange primary, soft rounded shapes) on a Geist-style token
+structure. Rules, not suggestions:
+
+- **Read `DESIGN.md` first.** Use the `:root` CSS variables in `src/index.css` —
+  **never hardcode hex.** Reserve `--accent` (orange) for primary action / active
+  nav / focus; `--indigo` is the Budget tile anchor; semantic `--ok`/`--err`/`--gold`
+  for under-budget/over-budget/warning and pill states.
+- **Reuse the component classes** (`.btn-*`, `.card`/`.panel`, `EditableCell`,
+  `.prio-pill`/`.status-pill`, `.incl`, `.grid` rows, tiles, `.topnav`, `.modal`) and
+  the **`Icon`** component (`src/components/Icon.jsx`) — never emoji as icons.
+- Font is **DM Sans** (loaded in `index.html`). 8px spacing rhythm; radius/shadow
+  tokens (`--r-*`, `--shadow`/`--shadow-lg`).
+- **See your output before shipping:** after UI changes run `npm run shots`
+  (Playwright; logs in, screenshots every page desktop + mobile into `shots/`) and
+  review the PNGs. Setup: copy `scripts/.shots.env.example` → `scripts/.shots.env`.

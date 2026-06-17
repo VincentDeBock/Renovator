@@ -1,25 +1,38 @@
 :root {
-  /* Calm neutral palette */
-  --bg: #f4f5f7;
+  /* Warm palette — Geist token structure, Headspace warmth. See DESIGN.md. */
+  --bg: #fbf7f1;           /* warm cream canvas */
   --card: #ffffff;
-  --ink: #1c1f23;
-  --muted: #6b7280;
-  --faint: #9ca3af;
-  --line: #e5e7eb;
-  --line-soft: #eef0f3;
-  --accent: #2f6f5e; /* muted teal-green, calm anchor color */
-  --accent-soft: #e7f0ed;
-  --section-bg: #fbfcfc;
-  --row-hover: #f7f8fa;
-  --on: #2f6f5e;
-  --on-bg: #d8eae3;
-  --off: #9ca3af;
-  --off-bg: #e9ebee;
-  --err: #b91c1c;
-  --err-bg: #fee2e2;
-  --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 16px rgba(16, 24, 40, 0.05);
+  --ink: #20223d;          /* deep indigo ink */
+  --muted: #645f6e;
+  --faint: #6e6877;        /* warm grey, AA-ok for small labels */
+  --line: #ece5da;         /* warm hairline */
+  --line-soft: #f4efe7;
+  --accent: #ff7a1a;       /* Headspace orange — primary action / active */
+  --accent-strong: #e86a0c;/* hover */
+  --accent-soft: #ffe9d6;  /* tint backgrounds, focus rings */
+  --indigo: #2b2d5b;       /* anchor (budget tile) */
+  --section-bg: #f7f1e8;
+  --row-hover: #f6f0e7;
+  --on: var(--accent);
+  --on-bg: var(--accent-soft);
+  --off: #8b8694;
+  --off-bg: #efeae2;
+  /* semantic */
+  --ok: #2f8f6b;  --ok-bg: #dcf0e6;
+  --err: #d7493a; --err-bg: #fce7e2;
+  --gold: #b47a12; --gold-bg: #fbeed0;
+  /* priority pills */
+  --prio-high-bg: var(--err-bg);  --prio-high-ink: var(--err);
+  --prio-med-bg: var(--gold-bg);  --prio-med-ink: var(--gold);
+  --prio-low-bg: var(--ok-bg);    --prio-low-ink: var(--ok);
+  /* radii */
+  --r-sm: 10px; --r-md: 12px; --r-lg: 16px; --r-xl: 20px; --r-pill: 999px;
+  /* elevation (soft, warm) */
+  --shadow: 0 1px 2px rgba(40, 30, 20, 0.05), 0 8px 24px rgba(40, 30, 20, 0.06);
+  --shadow-lg: 0 16px 48px rgba(40, 30, 20, 0.14);
 
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -108,16 +121,16 @@ body {
 .card {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 20px;
+  border-radius: var(--r-xl);
+  padding: 22px;
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 .card--budget {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--indigo);
+  border-color: var(--indigo);
   color: #fff;
 }
 .card-label {
@@ -140,7 +153,7 @@ body {
 .table {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--r-xl);
   box-shadow: var(--shadow);
   overflow: hidden;
 }
@@ -1015,9 +1028,9 @@ body {
 .panel {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--r-xl);
   box-shadow: var(--shadow);
-  padding: 20px 24px;
+  padding: 22px 24px;
   margin-top: 20px;
 }
 .panel-head {
@@ -1075,8 +1088,8 @@ body {
 }
 .modal {
   background: var(--card);
-  border-radius: 16px;
-  box-shadow: 0 12px 48px rgba(16, 24, 40, 0.25);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
   max-width: 92vw;
 }
 .confirm { width: 420px; padding: 24px; }
@@ -1136,9 +1149,9 @@ body {
 }
 .owner-select { border: none; background: none; min-height: auto; padding: 2px; }
 .prio-pill { font-weight: 700; border: none; }
-.prio-pill--high { background: #fee2e2; color: #b91c1c; }
-.prio-pill--medium { background: #fef3c7; color: #b45309; }
-.prio-pill--low { background: #dcfce7; color: #15803d; }
+.prio-pill--high { background: var(--prio-high-bg); color: var(--err); }
+.prio-pill--medium { background: var(--prio-med-bg); color: var(--gold); }
+.prio-pill--low { background: var(--ok-bg); color: var(--ok); }
 .tasks-add { margin-top: 12px; }
 
 /* File lists */
@@ -1161,8 +1174,8 @@ body {
 .file-sub { font-size: 12px; color: var(--muted); }
 .file-date { font-size: 13px; color: var(--muted); }
 .file-actions { display: flex; gap: 4px; justify-content: flex-end; }
-.status-pill--accepted { color: #15803d; border-color: #bbf7d0; background: #f0fdf4; font-weight: 600; }
-.status-pill--declined { color: #b91c1c; border-color: #fecaca; background: #fef2f2; font-weight: 600; }
+.status-pill--accepted { color: var(--ok); border-color: var(--ok-bg); background: var(--ok-bg); font-weight: 600; }
+.status-pill--declined { color: var(--err); border-color: var(--err-bg); background: var(--err-bg); font-weight: 600; }
 
 /* Upload + dropzone */
 .upload { margin-top: 8px; }
@@ -1181,7 +1194,7 @@ body {
 .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
 .thumb { padding: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; cursor: pointer; aspect-ratio: 4 / 3; background: var(--bg); }
 .thumb-media { width: 100%; height: 100%; object-fit: cover; display: block; }
-.thumb-loading { display: block; width: 100%; height: 100%; background: linear-gradient(90deg, #eee, #f6f6f6, #eee); }
+.thumb-loading { display: block; width: 100%; height: 100%; background: linear-gradient(90deg, var(--line-soft), var(--bg), var(--line-soft)); }
 
 /* Viewer modal */
 .viewer { width: min(900px, 92vw); display: flex; flex-direction: column; max-height: 90vh; }
@@ -1243,7 +1256,7 @@ body {
 /* ===== Design polish pass: icons, controls, hierarchy, contrast =========== */
 
 /* Better label contrast (was ~2.5:1, now AA-friendly) */
-:root { --faint: #6b7280; }
+:root { --faint: #6e6877; }
 
 .icon { display: block; flex-shrink: 0; }
 
@@ -1295,12 +1308,12 @@ body {
   min-height: 30px;
   background-color: var(--off-bg);
 }
-.prio-pill--high { background-color: #fee2e2; color: #b91c1c; }
-.prio-pill--medium { background-color: #fef3c7; color: #b45309; }
-.prio-pill--low { background-color: #dcfce7; color: #15803d; }
+.prio-pill--high { background-color: var(--prio-high-bg); color: var(--err); }
+.prio-pill--medium { background-color: var(--prio-med-bg); color: var(--gold); }
+.prio-pill--low { background-color: var(--ok-bg); color: var(--ok); }
 .status-pill { background-color: var(--row-hover); color: var(--muted); border-color: var(--line); }
-.status-pill--accepted { background-color: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
-.status-pill--declined { background-color: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+.status-pill--accepted { background-color: var(--ok-bg); color: var(--ok); border-color: var(--ok-bg); }
+.status-pill--declined { background-color: var(--err-bg); color: var(--err); border-color: var(--err-bg); }
 
 /* Owner: clear avatar, minimal inline name dropdown */
 .owner-avatar { width: 28px; height: 28px; font-size: 12px; }
@@ -1358,7 +1371,7 @@ body {
 }
 .incl-input:checked + .incl-box {
   background: var(--accent-soft);
-  border-color: #cfe0da;
+  border-color: var(--accent);
   color: var(--accent);
 }
 .incl-input:focus-visible + .incl-box { box-shadow: 0 0 0 3px var(--accent-soft); }

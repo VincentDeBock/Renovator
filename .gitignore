@@ -13,6 +13,10 @@ dist/
 scripts/.backup.env
 *.sql.gz
 
+# Screenshot loop: login secret + generated screenshots
+scripts/.shots.env
+/shots/
+
 # Logs
 npm-debug.log*
 *.log
