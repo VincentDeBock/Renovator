@@ -6,11 +6,12 @@ import homeIcon from '../assets/brand/nav-home.png'
 import tasksIcon from '../assets/brand/nav-tasks.png'
 import docsIcon from '../assets/brand/nav-documents.png'
 import settingsIcon from '../assets/brand/nav-settings.png'
+import mailIcon from '../assets/brand/nav-mail.png'
 
 const LINKS = [
   { to: '/', label: 'Overzicht', end: true, icon: homeIcon },
   { to: '/todo', label: 'To do', icon: tasksIcon },
-  { to: '/communicatie', label: 'Communicatie', svg: 'mail' },
+  { to: '/communicatie', label: 'Communicatie', icon: mailIcon },
   { to: '/documenten', label: 'Documenten', icon: docsIcon },
   { to: '/instellingen', label: 'Instellingen', icon: settingsIcon },
 ]
