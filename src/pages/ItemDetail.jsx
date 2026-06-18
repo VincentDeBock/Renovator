@@ -60,9 +60,12 @@ export default function ItemDetail({ project, entries, patchEntry, profiles, cur
             </span>
           </div>
         </div>
-
-        <DescriptionEditor value={entry.description} onSave={(d) => patchEntry(entry.id, { description: d })} />
       </div>
+
+      <section className="panel">
+        <h2 className="panel-title">Notities</h2>
+        <DescriptionEditor value={entry.description} onSave={(d) => patchEntry(entry.id, { description: d })} />
+      </section>
 
       <section className="panel">
         <h2 className="panel-title">To do</h2>
