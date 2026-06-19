@@ -196,7 +196,6 @@ function Hero() {
 
       <div className="lp-hero-inner">
         <div className="lp-hero-text">
-          <span className="lp-eyebrow">Renotrack</span>
           <h1 className="lp-hero-title">Houd je renovatie<br />op de rails.</h1>
           <p className="lp-hero-sub">
             Renotrack houdt je budget, je offertes, je taken én je mailbox bij — zodat jij je kan
