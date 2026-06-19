@@ -26,7 +26,7 @@ export default function Login() {
   return (
     <div className="login">
       <form className="login-card" onSubmit={onSubmit} noValidate>
-        <h1 className="login-title">Renovator</h1>
+        <h1 className="login-title">Renotrack</h1>
         <p className="login-sub">Meld je aan om verder te gaan</p>
 
         <label className="field">

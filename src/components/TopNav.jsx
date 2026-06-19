@@ -21,9 +21,9 @@ export default function TopNav() {
   return (
     <header className="topnav">
       <div className="topnav-inner">
-        <Link to="/" className="topnav-brand" aria-label="RenovAI — naar overzicht">
+        <Link to="/" className="topnav-brand" aria-label="Renotrack — naar overzicht">
           <img className="topnav-logo" src={logo} alt="" />
-          <span className="topnav-wordmark">RenovAI</span>
+          <span className="topnav-wordmark">Renotrack</span>
         </Link>
         <nav className="topnav-links">
           {LINKS.map((l) => (
