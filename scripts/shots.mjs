@@ -8,7 +8,7 @@
 //   npm run dev        (or: npm run build && npm run preview)
 //   npm run shots
 
-import { chromium } from 'playwright'
+import { chromium, webkit } from 'playwright'
 import { readFileSync, mkdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
@@ -52,8 +52,18 @@ const VIEWPORTS = [
 const outDir = join(root, 'shots')
 mkdirSync(outDir, { recursive: true })
 
-const browser = await chromium.launch()
-try {
+// Render in both Blink (Chromium) and WebKit (Safari). Native form controls —
+// date inputs, selects — and many CSS edge cases render differently per engine,
+// so a Chromium-only pass misses Safari-specific bugs (e.g. the date picker
+// indicator spilling out of its box). WebKit is optional: if the binary isn't
+// installed we warn and carry on rather than failing the whole run.
+// One-time: `npx playwright install webkit`.
+const ENGINES = [
+  ['', chromium],
+  ['safari-', webkit],
+]
+
+async function shoot(prefix, browser) {
   for (const [vpName, viewport] of VIEWPORTS) {
     const ctx = await browser.newContext({ viewport, deviceScaleFactor: 2 })
     const page = await ctx.newPage()
@@ -70,7 +80,7 @@ try {
     for (const [name, route] of ROUTES) {
       await page.goto(BASE + route, { waitUntil: 'networkidle' })
       await page.waitForTimeout(600)
-      const file = join(outDir, `${name}-${vpName}.png`)
+      const file = join(outDir, `${prefix}${name}-${vpName}.png`)
       await page.screenshot({ path: file, fullPage: true })
       console.log('shot', file)
     }
@@ -81,14 +91,28 @@ try {
     if (await firstItem.count()) {
       await firstItem.click()
       await page.waitForTimeout(800)
-      const file = join(outDir, `item-detail-${vpName}.png`)
+      const file = join(outDir, `${prefix}item-detail-${vpName}.png`)
       await page.screenshot({ path: file, fullPage: true })
       console.log('shot', file)
     }
 
     await ctx.close()
   }
-} finally {
-  await browser.close()
+}
+
+for (const [prefix, engine] of ENGINES) {
+  let browser
+  try {
+    browser = await engine.launch()
+  } catch (e) {
+    console.warn(`\n⚠ Skipping ${engine.name()} — ${e.message.split('\n')[0]}`)
+    console.warn(`  Install it once with: npx playwright install ${engine.name()}\n`)
+    continue
+  }
+  try {
+    await shoot(prefix, browser)
+  } finally {
+    await browser.close()
+  }
 }
 console.log(`\nDone → ${outDir}`)

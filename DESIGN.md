@@ -83,9 +83,28 @@ Designing blind causes drift. After any UI change:
 
 ```sh
 npm run dev            # or: npm run build && npm run preview
-npm run shots          # logs in + screenshots every page (desktop + mobile)
+npx playwright install webkit   # one-time, enables the Safari pass
+npm run shots          # logs in + screenshots every page, Chromium + WebKit, desktop + mobile
 ```
 
-Screenshots land in `shots/` (gitignored). **Review them** — check hierarchy,
-contrast, spacing, alignment, color discipline — and fix before handing back.
-Setup: copy `scripts/.shots.env.example` → `scripts/.shots.env` and fill the login.
+Screenshots land in `shots/` (gitignored): Chromium as `<page>-<vp>.png`, Safari
+as `safari-<page>-<vp>.png`. **Review both engines** — and fix before handing
+back. Setup: copy `scripts/.shots.env.example` → `scripts/.shots.env` and fill
+the login. (WebKit is optional — the run skips it with a hint if not installed —
+but our users are on Safari, so don't skip it for real review.)
+
+### Review checklist (the things screenshots-in-one-browser miss)
+
+- **Render in Safari, not just Chrome.** Native form controls (`input[type=date]`,
+  `select`) and many CSS edge cases differ per engine. The date-picker indicator
+  spilling out of its box only showed in Safari — Chromium hid it. When in doubt,
+  prefer a custom control (see `ItemSelect`) over a styled native one, and clip the
+  container (`overflow: hidden`) so native glyphs can't escape.
+- **Match the control to the interaction.** A binary on/off state is a `.toggle`
+  switch, not orange link text. A pick-one is a pill/select; a pick-from-a-long-list
+  is the `ItemSelect` popover. Don't ship a `<button>`/link where the affordance
+  should read as a control.
+- **Nothing overflows or clips its container** — icons, long labels, popovers,
+  truncated text (check the longest realistic value, not the demo data).
+- **Alignment & hierarchy** — columns line up, related controls share a baseline,
+  section vs item weight is unambiguous.

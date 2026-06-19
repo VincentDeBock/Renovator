@@ -137,6 +137,9 @@ export default function SectionGroup({
             ariaLabel="Naam sectie"
             onSave={(name) => onUpdate(section.id, { name })}
           />
+          {hasItems && (
+            <span className="section-count">{items.length} {items.length === 1 ? 'item' : 'items'}</span>
+          )}
         </div>
 
         <div className="cell cell--amount" data-label="Offerte">
@@ -184,10 +187,13 @@ export default function SectionGroup({
             ))}
           </SortableContext>
 
-          <div className="row row--additem">
-            <button type="button" className="btn-add-item" onClick={() => onAddItem(section.id)}>
-              + Item toevoegen
-            </button>
+          <div className="row row--additem grid">
+            <div className="cell cell--drag" aria-hidden="true" />
+            <div className="cell cell--name">
+              <button type="button" className="btn-add-item" onClick={() => onAddItem(section.id)}>
+                <Icon name="plus" size={15} /> Item toevoegen
+              </button>
+            </div>
           </div>
         </>
       )}

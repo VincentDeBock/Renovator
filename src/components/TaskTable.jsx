@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import EditableCell from './EditableCell'
 import Icon from './Icon'
 import { getTasks, makeTask, insertTask, updateTask, deleteTask } from '../lib/tasks'
 
 const PRIO_RANK = { high: 0, medium: 1, low: 2 }
-const PRIO_LABEL = { high: 'High', medium: 'Medium', low: 'Low' }
 
 function OwnerCell({ ownerId, profiles, onChange }) {
   const p = profiles.find((x) => x.id === ownerId)
@@ -18,6 +17,88 @@ function OwnerCell({ ownerId, profiles, onChange }) {
         ))}
       </select>
     </span>
+  )
+}
+
+// Custom item picker: the trigger shows section + item on two lines (no
+// truncation of the meaningful item name), and the popover is wider than the
+// cell so long "Section / Item" paths stay fully readable. Grouped by section,
+// the way Linear/Asana surface long reference lists.
+function ItemSelect({ value, options, onChange }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  const selected = options.find((o) => o.id === value)
+
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    const onKey = (e) => e.key === 'Escape' && setOpen(false)
+    document.addEventListener('mousedown', onDoc)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const groups = useMemo(() => {
+    const m = new Map()
+    for (const o of options) {
+      if (!m.has(o.section)) m.set(o.section, [])
+      m.get(o.section).push(o)
+    }
+    return [...m.entries()]
+  }, [options])
+
+  function pick(id) {
+    onChange(id)
+    setOpen(false)
+  }
+
+  return (
+    <div className={`itempick ${open ? 'itempick--open' : ''}`} ref={ref}>
+      <button type="button" className="itempick-trigger" onClick={() => setOpen((v) => !v)}>
+        {selected ? (
+          <span className="itempick-value">
+            <span className="itempick-section">{selected.section}</span>
+            <span className="itempick-item">{selected.item}</span>
+          </span>
+        ) : (
+          <span className="itempick-placeholder">Koppel item</span>
+        )}
+        <Icon name="chevron" size={14} className="itempick-caret" />
+      </button>
+
+      {open && (
+        <div className="itempick-pop" role="listbox">
+          <button
+            type="button"
+            className={`itempick-opt itempick-opt--none ${!value ? 'is-selected' : ''}`}
+            onClick={() => pick(null)}
+          >
+            Geen item
+          </button>
+          {groups.map(([section, opts]) => (
+            <div key={section} className="itempick-group">
+              <div className="itempick-group-label">{section}</div>
+              {opts.map((o) => (
+                <button
+                  key={o.id}
+                  type="button"
+                  className={`itempick-opt ${o.id === value ? 'is-selected' : ''}`}
+                  onClick={() => pick(o.id)}
+                >
+                  {o.item}
+                  {o.id === value && <Icon name="check" size={14} />}
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -40,11 +121,6 @@ export default function TaskTable({ projectId, entryId = null, profiles, current
       cancelled = true
     }
   }, [projectId, entryId])
-
-  const itemLabel = useMemo(() => {
-    const m = new Map(itemOptions.map((o) => [o.id, o.label]))
-    return (id) => m.get(id) || '—'
-  }, [itemOptions])
 
   const visible = useMemo(() => {
     let list = tasks.filter((t) => showCompleted || !t.completed)
@@ -100,14 +176,29 @@ export default function TaskTable({ projectId, entryId = null, profiles, current
     }
   }
 
-  const sortMark = (key) => (sort.key === key ? (sort.dir === 'asc' ? ' ▲' : ' ▼') : '')
+  const SortHead = ({ k, children, className }) => (
+    <button
+      type="button"
+      className={`tcol-btn ${sort.key === k ? 'tcol-btn--active' : ''}`}
+      onClick={() => toggleSort(k)}
+    >
+      {children}
+      <span className="tcol-caret">{sort.key === k ? (sort.dir === 'asc' ? '↑' : '↓') : ''}</span>
+    </button>
+  )
 
   return (
     <div className="tasks">
       <div className="tasks-toolbar">
-        <button type="button" className="link-btn" onClick={() => setShowCompleted((v) => !v)}>
-          {showCompleted ? 'Verberg voltooide taken' : 'Toon voltooide taken'}
-        </button>
+        <label className="toggle tasks-showdone">
+          <input
+            type="checkbox"
+            checked={showCompleted}
+            onChange={(e) => setShowCompleted(e.target.checked)}
+          />
+          <span className="toggle-track" aria-hidden="true"><span className="toggle-thumb" /></span>
+          <span className="toggle-text">Voltooide taken tonen</span>
+        </label>
       </div>
 
       {error && <div className="banner banner--error" role="alert">{error}<button className="banner-close" onClick={() => setError(null)}>✕</button></div>}
@@ -115,11 +206,11 @@ export default function TaskTable({ projectId, entryId = null, profiles, current
       <div className="tasktable">
         <div className={`trow trow--head ${entryId ? 'trow--scoped' : ''}`}>
           <div className="tcell tcell--check" />
-          <div className="tcell tcell--title sortable" onClick={() => toggleSort('title')}>Taak{sortMark('title')}</div>
+          <div className="tcell tcell--title"><SortHead k="title">Taak</SortHead></div>
           {!entryId && <div className="tcell tcell--item">Item</div>}
-          <div className="tcell tcell--owner sortable" onClick={() => toggleSort('owner')}>Eigenaar{sortMark('owner')}</div>
-          <div className="tcell tcell--prio sortable" onClick={() => toggleSort('priority')}>Prioriteit{sortMark('priority')}</div>
-          <div className="tcell tcell--deadline sortable" onClick={() => toggleSort('deadline')}>Deadline{sortMark('deadline')}</div>
+          <div className="tcell tcell--owner"><SortHead k="owner">Eigenaar</SortHead></div>
+          <div className="tcell tcell--prio"><SortHead k="priority">Prioriteit</SortHead></div>
+          <div className="tcell tcell--deadline"><SortHead k="deadline">Deadline</SortHead></div>
           <div className="tcell tcell--act" />
         </div>
 
@@ -129,19 +220,17 @@ export default function TaskTable({ projectId, entryId = null, profiles, current
         {visible.map((t) => (
           <div key={t.id} className={`trow ${entryId ? 'trow--scoped' : ''} ${t.completed ? 'trow--done' : ''}`}>
             <div className="tcell tcell--check">
-              <input type="checkbox" checked={t.completed} onChange={(e) => patch(t.id, { completed: e.target.checked })} aria-label="Voltooid" />
+              <label className="task-check">
+                <input type="checkbox" checked={t.completed} onChange={(e) => patch(t.id, { completed: e.target.checked })} aria-label="Voltooid" />
+                <span className="task-check-box" aria-hidden="true"><Icon name="check" size={13} strokeWidth={3} /></span>
+              </label>
             </div>
             <div className="tcell tcell--title" data-label="Taak">
               <EditableCell value={t.title} placeholder="Nieuwe taak" ariaLabel="Taak" onSave={(v) => patch(t.id, { title: v })} />
             </div>
             {!entryId && (
               <div className="tcell tcell--item" data-label="Item">
-                <select className="item-select" value={t.entry_id || ''} onChange={(e) => patch(t.id, { entry_id: e.target.value || null })}>
-                  <option value="">—</option>
-                  {itemOptions.map((o) => (
-                    <option key={o.id} value={o.id}>{o.label}</option>
-                  ))}
-                </select>
+                <ItemSelect value={t.entry_id || null} options={itemOptions} onChange={(v) => patch(t.id, { entry_id: v })} />
               </div>
             )}
             <div className="tcell tcell--owner" data-label="Eigenaar">
@@ -155,7 +244,16 @@ export default function TaskTable({ projectId, entryId = null, profiles, current
               </select>
             </div>
             <div className="tcell tcell--deadline" data-label="Deadline">
-              <input type="date" className="date-input" value={t.deadline || ''} onChange={(e) => patch(t.id, { deadline: e.target.value || null })} />
+              <span className={`date-field ${t.deadline ? '' : 'date-field--empty'}`}>
+                <Icon name="calendar" size={15} className="date-field-icon" />
+                <input
+                  type="date"
+                  className="date-input"
+                  value={t.deadline || ''}
+                  onClick={(e) => e.currentTarget.showPicker?.()}
+                  onChange={(e) => patch(t.id, { deadline: e.target.value || null })}
+                />
+              </span>
             </div>
             <div className="tcell tcell--act">
               <button type="button" className="btn-icon" title="Taak verwijderen" onClick={() => remove(t.id)}><Icon name="trash" size={16} /></button>
@@ -164,7 +262,7 @@ export default function TaskTable({ projectId, entryId = null, profiles, current
         ))}
       </div>
 
-      <button type="button" className="btn-add-item tasks-add" onClick={add}>+ Taak toevoegen</button>
+      <button type="button" className="btn-add-item tasks-add" onClick={add}><Icon name="plus" size={15} /> Taak toevoegen</button>
     </div>
   )
 }
