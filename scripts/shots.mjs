@@ -68,8 +68,9 @@ async function shoot(prefix, browser) {
     const ctx = await browser.newContext({ viewport, deviceScaleFactor: 2 })
     const page = await ctx.newPage()
 
-    // Log in.
-    await page.goto(BASE, { waitUntil: 'networkidle' })
+    // Log in. The login form lives at /login — `/` is the public marketing
+    // landing page, which has no email field, so go straight to /login.
+    await page.goto(BASE + '/login', { waitUntil: 'networkidle' })
     if (await page.locator('input[type="email"]').count()) {
       await page.fill('input[type="email"]', EMAIL)
       await page.fill('input[type="password"]', PASSWORD)
