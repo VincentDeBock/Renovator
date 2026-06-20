@@ -2,7 +2,12 @@
   command = "npm run build"
   publish = "dist"
 
-# SPA fallback so client-side routes resolve to index.html
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# SPA fallback so client-side routes resolve to index.html. Function routes under
+# /.netlify/functions/* are served before this and are unaffected.
 [[redirects]]
   from = "/*"
   to = "/index.html"

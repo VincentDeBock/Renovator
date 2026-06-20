@@ -106,6 +106,7 @@ export default function Communicatie() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [weekIndex, setWeekIndex] = useState(0)
 
   useEffect(() => {
     let c = false
@@ -132,6 +133,32 @@ export default function Communicatie() {
 
   const thisWeekKey = ymd(weekStart(new Date().toISOString()))
 
+  // Open on the current week when it exists, otherwise the newest (index 0).
+  useEffect(() => {
+    if (!weeks.length) return
+    const i = weeks.findIndex((w) => ymd(w.start) === thisWeekKey)
+    setWeekIndex(i >= 0 ? i : 0)
+  }, [weeks, thisWeekKey])
+
+  // weekIndex 0 = newest. Left arrow → older (index+1), right arrow → newer (index-1).
+  const atNewest = weekIndex <= 0
+  const atOldest = weekIndex >= weeks.length - 1
+  const goOlder = () => setWeekIndex((i) => Math.min(i + 1, weeks.length - 1))
+  const goNewer = () => setWeekIndex((i) => Math.max(i - 1, 0))
+
+  // Arrow keys jump between weeks.
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return
+      if (e.key === 'ArrowLeft') goOlder()
+      else if (e.key === 'ArrowRight') goNewer()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [weeks.length])
+
+  const current = weeks[weekIndex]
+
   return (
     <div className="page">
       <header className="page-header">
@@ -149,32 +176,69 @@ export default function Communicatie() {
 
       {!loading && !error && (
         <>
-          {rows.length === 0 && <div className="empty">Nog geen communicatie samengevat.</div>}
+          {weeks.length === 0 && <div className="empty">Nog geen communicatie samengevat.</div>}
 
-          {weeks.map(({ start, items }) => {
-            const isThisWeek = ymd(start) === thisWeekKey
-            const actions = items.filter((i) => i.action_needed).length
+          {current && (() => {
+            const isThisWeek = ymd(current.start) === thisWeekKey
+            const actions = current.items.filter((i) => i.action_needed).length
             return (
-              <section key={ymd(start)} className="cw-week">
-                <div className="cw-week-head">
-                  <h2 className="cw-week-title">
-                    {isThisWeek ? 'Deze week' : 'Week van'}{' '}
-                    <span className="cw-week-range">{weekLabel(start)}</span>
-                  </h2>
-                  <div className="cw-week-meta">
-                    <span>{items.length} {items.length === 1 ? 'bericht' : 'berichten'}</span>
-                    {actions > 0 && <span className="cw-week-actions">{actions}× actie nodig</span>}
+              <section className="cw-week">
+                <div className="cw-nav">
+                  <button
+                    type="button"
+                    className="cw-nav-btn"
+                    onClick={goOlder}
+                    disabled={atOldest}
+                    aria-label="Vorige week"
+                    title="Vorige week"
+                  >
+                    <Icon name="back" size={18} />
+                  </button>
+
+                  <div className="cw-nav-center">
+                    <h2 className="cw-week-title">
+                      {isThisWeek ? 'Deze week' : 'Week van'}{' '}
+                      <span className="cw-week-range">{weekLabel(current.start)}</span>
+                    </h2>
+                    <div className="cw-week-meta">
+                      <span>{current.items.length} {current.items.length === 1 ? 'bericht' : 'berichten'}</span>
+                      {actions > 0 && <span className="cw-week-actions">{actions}× actie nodig</span>}
+                    </div>
                   </div>
+
+                  <button
+                    type="button"
+                    className="cw-nav-btn"
+                    onClick={goNewer}
+                    disabled={atNewest}
+                    aria-label="Volgende week"
+                    title="Volgende week"
+                  >
+                    <Icon name="forward" size={18} />
+                  </button>
+                </div>
+
+                <div className="cw-weekpick">
+                  <label>
+                    Spring naar week:{' '}
+                    <select value={weekIndex} onChange={(e) => setWeekIndex(Number(e.target.value))}>
+                      {weeks.map((w, i) => (
+                        <option key={ymd(w.start)} value={i}>
+                          {ymd(w.start) === thisWeekKey ? 'Deze week' : weekLabel(w.start)} ({w.items.length})
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
 
                 <div className="cw-list">
-                  {items.map((s) => (
+                  {current.items.map((s) => (
                     <MailRow key={s.id} s={s} />
                   ))}
                 </div>
               </section>
             )
-          })}
+          })()}
         </>
       )}
     </div>

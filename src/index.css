@@ -1333,6 +1333,21 @@ body {
 }
 .tagchip--on { color: #fff; background: var(--accent); border-color: var(--accent); }
 
+/* AI-derived title keeps the original filename visible underneath, light grey. */
+.file-origname { font-size: 12px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ai-badge { font-weight: 600; }
+.ai-badge--pending { color: var(--accent-strong); }
+.ai-badge--error { color: var(--err); }
+
+/* Per-row controls: link picker, tag chips, archive — stacked on the right. */
+.docrow-controls { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.doc-link { font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+.doc-link-label { white-space: nowrap; }
+.doc-link select { font: inherit; font-size: 12px; padding: 5px 7px; border: 1px solid var(--line); border-radius: 8px; max-width: 220px; }
+.doc-archive-btn { font-size: 12px; padding: 5px 12px; min-height: 32px; }
+.docs-archive-toggle { margin-left: auto; min-height: 36px; }
+.docs-archive-toggle.is-on { border-color: var(--accent); color: var(--accent-strong); }
+
 /* Settings tags */
 .taglist { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
 .tagrow, .tag-add { display: flex; align-items: center; gap: 10px; }
@@ -1354,6 +1369,8 @@ body {
   .filerow { grid-template-columns: 1fr; }
   .docrow { grid-template-columns: 1fr; }
   .doc-tags { justify-content: flex-start; }
+  .docrow-controls { align-items: stretch; }
+  .doc-link select { max-width: none; flex: 1; }
   .cards--3, .cards--2 { grid-template-columns: 1fr; }
 }
 
@@ -1610,6 +1627,24 @@ body {
 .cw-week-range { color: var(--ink); text-transform: none; letter-spacing: 0; font-size: 15px; margin-left: 2px; }
 .cw-week-meta { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--faint); white-space: nowrap; }
 .cw-week-actions { color: var(--accent-strong); font-weight: 700; }
+
+/* Horizontal week navigation: one week at a time with prev/next + picker. */
+.cw-nav {
+  display: flex; align-items: center; gap: 12px;
+  padding: 4px 4px 10px; border-bottom: 1px solid var(--line);
+}
+.cw-nav-center { flex: 1; text-align: center; display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.cw-nav-btn {
+  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: var(--r-lg);
+  background: var(--card); border: 1px solid var(--line); color: var(--ink);
+  cursor: pointer; box-shadow: var(--shadow);
+}
+.cw-nav-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-strong); }
+.cw-nav-btn:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+.cw-weekpick { margin-top: 10px; text-align: center; }
+.cw-weekpick label { font-size: 13px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
+.cw-weekpick select { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; }
 
 .cw-list {
   background: var(--card); border: 1px solid var(--line); border-radius: var(--r-xl);
