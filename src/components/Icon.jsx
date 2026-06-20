@@ -43,6 +43,7 @@ const PATHS = {
   plus: <path d="M12 5v14M5 12h14" />,
   check: <path d="M20 6L9 17l-5-5" />,
   back: <path d="M19 12H5M12 19l-7-7 7-7" />,
+  forward: <path d="M5 12h14M12 5l7 7-7 7" />,
   upload: (
     <>
       <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
