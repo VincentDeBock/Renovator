@@ -17,6 +17,9 @@ scripts/.backup.env
 scripts/.shots.env
 /shots/
 
+# Demo seeder: the demo project's service-role key (never commit)
+scripts/.demo.env
+
 # Logs
 npm-debug.log*
 *.log
