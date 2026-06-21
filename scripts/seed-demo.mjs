@@ -125,6 +125,8 @@ async function clearProject(projectId) {
     await supabase.from('files').delete().eq('project_id', projectId)
   }
   await supabase.from('entries').delete().eq('project_id', projectId)
+  await supabase.from('tasks').delete().eq('project_id', projectId)
+  await supabase.from('email_summaries').delete().not('id', 'is', null)
 }
 
 async function ensureUser() {
@@ -196,6 +198,7 @@ async function main() {
   console.log('✓ project geleegd, opnieuw zaaien…')
 
   const tagCache = new Map()
+  const createdItems = []
   let pos = 0, nQuote = 0, nInvoice = 0, nPhoto = 0
   let quoteSeq = 10, invoiceSeq = 280
 
@@ -218,6 +221,7 @@ async function main() {
           position: itemPos++, raming: item.raming, offertes: 0, facturen: 0, version_ids: versionIds,
           description: `Demo-item onder ${section.name}.`,
         })
+        createdItems.push({ id: itemId, name: item.name })
 
         if (item.quote) {
           const total = incBtw(item.quote.lines)
@@ -258,7 +262,71 @@ async function main() {
     }
   })
 
-  console.log(`✓ klaar: ${PLAN.length} secties, offertes: ${nQuote}, facturen: ${nInvoice}, foto's: ${nPhoto}`)
+  // --- Taken (sommige gekoppeld aan een item) --------------------------------
+  const itemId = (name) => createdItems.find((i) => i.name === name)?.id ?? null
+  const today = new Date()
+  const day = (n) => { const d = new Date(today); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
+  const TASKS = [
+    { title: 'Offerte ramen tekenen en terugsturen', item: 'Ramen & voordeur', priority: 'high', deadline: day(3) },
+    { title: 'Voorschot dakwerken betalen', item: 'Hellend dak & isolatie', priority: 'high', deadline: day(1) },
+    { title: 'Keuring elektriciteit inplannen', item: 'Volledige herbekabeling', priority: 'medium', deadline: day(9) },
+    { title: 'Tegelstaal keuken kiezen', item: 'Maatkeuken', priority: 'medium', deadline: day(6) },
+    { title: 'Tweede offerte tuinaanleg opvragen', item: 'Terras & tuinaanleg', priority: 'low', deadline: day(14) },
+    { title: 'Afspraak architect — werfvergadering', item: null, priority: 'medium', deadline: day(4) },
+    { title: 'Premie isolatie aanvragen', item: 'Hellend dak & isolatie', priority: 'low', deadline: day(20) },
+    { title: 'Afbraakwerken opgeleverd — factuur gecontroleerd', item: 'Afbraak & grondwerken', priority: 'medium', deadline: day(-5), done: true },
+  ]
+  for (let i = 0; i < TASKS.length; i++) {
+    const t = TASKS[i]
+    await supabase.from('tasks').insert({
+      id: randomUUID(), project_id: projectId, entry_id: t.item ? itemId(t.item) : null, title: t.title,
+      owner_id: userId ?? null, priority: t.priority, deadline: t.deadline ?? null, completed: !!t.done,
+      position: i, created_by: userId ?? null,
+    })
+  }
+
+  // --- Communicatie: e-mailsamenvattingen over de afgelopen weken -------------
+  const iso = (daysAgo, h = 9, m = 30) => {
+    const d = new Date(today); d.setDate(d.getDate() - daysAgo); d.setHours(h, m, 0, 0); return d.toISOString()
+  }
+  const EMAILS = [
+    { d: 1, h: 8, sender: 'iGenia <info@igenia.be>', subject: 'Bevestiging aanvang geplande etappe', category: 'architect', action: true,
+      points: ['Werfbezoek gepland vanaf 26/06/2026 (week 26)', 'Start van de werken, dossier 251278VE', 'Bevestig je aanwezigheid'], att: ['werfplanning.pdf'] },
+    { d: 2, h: 14, sender: 'Schrijnwerkerij Vermeulen <offertes@vermeulen.be>', subject: 'Offerte ramen & voordeur', category: 'quote', action: true,
+      points: ['Totaalbedrag € 10.248,70 incl. btw', 'Geldig tot 12/03/2026', 'Gelieve te ondertekenen voor levering'], att: ['Offerte_OFF-2026-012.pdf'] },
+    { d: 4, h: 11, sender: 'Bouwwerken De Smet <info@desmet-bouw.be>', subject: 'Stand van zaken ruwbouw', category: 'other', action: false,
+      points: ['Funderingen gestort', 'Metselwerk start volgende week'] },
+    { d: 8, h: 16, sender: 'Dakwerken Janssens <facturatie@janssens-dak.be>', subject: 'Factuur dakrenovatie', category: 'invoice', action: true,
+      points: ['Bedrag € 17.753,12 incl. btw', 'Te betalen binnen 14 dagen', 'Vermeld factuurnummer F2026-0280'], att: ['Factuur_F2026-0280.pdf'] },
+    { d: 9, h: 10, sender: 'Elektro Maes <info@elektromaes.be>', subject: 'Planning herbekabeling', category: 'other', action: false,
+      points: ['Uitvoering voorzien week 27', 'Keuring na afronding'] },
+    { d: 11, h: 13, sender: 'iGenia <info@igenia.be>', subject: 'Verslag werfvergadering 3', category: 'architect', action: false,
+      points: ['Pleisterwerk goedgekeurd', 'Aandachtspunt: levering tegels', 'Volgende vergadering week 28'], att: ['verslag-wv3.pdf'] },
+    { d: 15, h: 9, sender: 'Keukens Devos <verkoop@devos-keukens.be>', subject: 'Offerte maatkeuken', category: 'quote', action: true,
+      points: ['Totaal € 22.385,00 incl. btw', 'Levertermijn 8 weken', 'Tegelstaal nog te kiezen'], att: ['offerte-keuken.pdf'] },
+    { d: 17, h: 15, sender: 'Sanitair & Verwarming Peeters <info@peeters-sanitair.be>', subject: 'Bevestiging afspraak badkamer', category: 'other', action: false,
+      points: ['Plaatsbezoek 30/05', 'Meetstaat volgt'] },
+    { d: 22, h: 12, sender: 'Schilderwerken Claes <info@claes-schilder.be>', subject: 'Factuur pleisterwerk', category: 'invoice', action: false,
+      points: ['Bedrag € 8.954,00 incl. btw', 'Betaald — ter info'], att: ['factuur-pleister.pdf'] },
+    { d: 24, h: 8, sender: 'Tuinaanleg Verstraeten <info@verstraeten-tuinen.be>', subject: 'Offerte terras & tuin', category: 'quote', action: false,
+      points: ['Totaal € 9.196,40 incl. btw', 'Offerte momenteel niet weerhouden'], att: ['offerte-tuin.pdf'] },
+    { d: 30, h: 17, sender: 'iGenia <info@igenia.be>', subject: 'Stedenbouwkundige vergunning goedgekeurd', category: 'architect', action: false,
+      points: ['Vergunning afgeleverd', 'Werken mogen starten'], att: ['vergunning.pdf'] },
+    { d: 33, h: 10, sender: 'Bouwwerken De Smet <info@desmet-bouw.be>', subject: 'Factuur afbraak & grondwerken', category: 'invoice', action: false,
+      points: ['Bedrag € 14.520,00 incl. btw', 'Reeds betaald'], att: ['Factuur_F2026-0279.pdf'] },
+  ]
+  for (let i = 0; i < EMAILS.length; i++) {
+    const e = EMAILS[i]
+    await supabase.from('email_summaries').insert({
+      gmail_message_id: `demo-${String(i + 1).padStart(3, '0')}`,
+      rfc822_message_id: `<demo-${i + 1}@renofix.demo>`,
+      received_at: iso(e.d, e.h), sender: e.sender, subject: e.subject, category: e.category,
+      summary_text: e.points.join(' '), key_points: e.points, action_needed: e.action,
+      has_attachments: !!(e.att && e.att.length), attachment_names: e.att ?? [],
+    })
+  }
+
+  console.log(`✓ klaar: ${PLAN.length} secties, offertes: ${nQuote}, facturen: ${nInvoice}, foto's: ${nPhoto}, taken: ${TASKS.length}, e-mails: ${EMAILS.length}`)
   console.log(`\nLog in op de demo-app met:  ${DEMO_EMAIL}  /  ${DEMO_PASSWORD}`)
 }
 

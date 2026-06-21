@@ -1269,7 +1269,7 @@ body {
   background: #fff;
 }
 .filerow { grid-template-columns: minmax(0, 2fr) 130px 110px 140px auto; }
-.docrow { grid-template-columns: minmax(0, 2fr) auto; }
+.docrow { display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
 .filerow-main { display: flex; align-items: center; gap: 10px; background: none; border: none; cursor: pointer; text-align: left; min-width: 0; }
 .file-icon { font-size: 20px; flex-shrink: 0; }
 .file-meta { display: flex; flex-direction: column; min-width: 0; }
@@ -1339,8 +1339,9 @@ body {
 .ai-badge--pending { color: var(--accent-strong); }
 .ai-badge--error { color: var(--err); }
 
-/* Per-row controls: link picker, tag chips, archive — stacked on the right. */
-.docrow-controls { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+/* Per-row controls: link picker, tag chips, archive — a wrapping row below the name. */
+.docrow-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; border-top: 1px solid var(--line-soft); padding-top: 10px; }
+.docrow-controls .doc-tags { flex: 1 1 240px; justify-content: flex-start; }
 .doc-link { font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
 .doc-link-label { white-space: nowrap; }
 .doc-link select { font: inherit; font-size: 12px; padding: 5px 7px; border: 1px solid var(--line); border-radius: 8px; max-width: 220px; }
