@@ -1,12 +1,14 @@
 name: Daily Verbouwing email summary
 
-# 06:30 Europe/Brussels. GitHub cron is UTC-only, so this is exact during summer
-# (CEST, UTC+2 → 04:30 UTC) and one hour earlier (05:30) in winter (CET). The job is
-# cursor-based and idempotent, so the small DST drift never misses or duplicates mail.
+# Twice daily, ~06:30 and ~16:30 Europe/Brussels. GitHub cron is UTC-only, so these
+# are exact during summer (CEST, UTC+2 → 04:30/14:30 UTC) and one hour earlier in
+# winter (CET). The job is cursor-based and idempotent, so the small DST drift and
+# overlapping manual runs never miss or duplicate mail.
 on:
   schedule:
     - cron: "30 4 * * *"
-  workflow_dispatch: {} # manual trigger for testing / on-demand runs
+    - cron: "30 14 * * *"
+  workflow_dispatch: {} # manual trigger — also used by the in-app "Sync nu" button
 
 concurrency:
   group: daily-summary

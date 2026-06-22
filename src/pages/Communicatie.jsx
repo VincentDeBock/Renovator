@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import Icon from '../components/Icon'
-import { getEmailSummaries } from '../lib/communicatie'
+import { getEmailSummaries, triggerSync } from '../lib/communicatie'
 
 const TZ = 'Europe/Brussels'
 const CATEGORY = {
@@ -107,6 +107,8 @@ export default function Communicatie() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [weekIndex, setWeekIndex] = useState(0)
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState(null)
 
   useEffect(() => {
     let c = false
@@ -118,6 +120,24 @@ export default function Communicatie() {
       c = true
     }
   }, [])
+
+  async function handleSync() {
+    setSyncing(true)
+    setSyncMsg(null)
+    setError(null)
+    try {
+      await triggerSync()
+      setSyncMsg('Synchronisatie gestart — nieuwe samenvattingen verschijnen na ~1 minuut.')
+      // The GitHub run needs a moment to spin up; pull the fresh list after a delay.
+      setTimeout(() => {
+        getEmailSummaries().then(setRows).catch(() => {})
+      }, 60000)
+    } catch (e) {
+      setError(`Sync mislukt: ${e.message}`)
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   // Group by week (Monday-start), newest week first, newest message first.
   const weeks = useMemo(() => {
@@ -161,10 +181,22 @@ export default function Communicatie() {
 
   return (
     <div className="page">
-      <header className="page-header">
-        <h1>Communicatie</h1>
-        <p className="subtitle">Wekelijks overzicht van je Verbouwing-mailbox</p>
+      <header className="page-header cw-header">
+        <div>
+          <h1>Communicatie</h1>
+          <p className="subtitle">Wekelijks overzicht van je Verbouwing-mailbox</p>
+        </div>
+        <button type="button" className="btn-primary cw-sync" onClick={handleSync} disabled={syncing}>
+          <Icon name="mail" size={16} /> {syncing ? 'Synchroniseren…' : 'Sync nu'}
+        </button>
       </header>
+
+      {syncMsg && (
+        <div className="banner banner--info" role="status">
+          {syncMsg}
+          <button className="banner-close" onClick={() => setSyncMsg(null)}>✕</button>
+        </div>
+      )}
 
       {error && (
         <div className="banner banner--error" role="alert">
