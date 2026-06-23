@@ -4,6 +4,7 @@ import EditableCell from '../components/EditableCell'
 import Icon from '../components/Icon'
 import TaskTable from '../components/TaskTable'
 import FileSection from '../components/FileSection'
+import InspirationBoard from '../components/InspirationBoard'
 import { formatEuro } from '../lib/format'
 
 function DescriptionEditor({ value, onSave }) {
@@ -74,7 +75,13 @@ export default function ItemDetail({ project, entries, patchEntry, profiles, cur
 
       <FileSection projectId={project.id} entryId={entry.id} category="quote" mode="list" title="Offertes" accept="application/pdf,image/*" uploadedBy={me?.display_name} />
       <FileSection projectId={project.id} entryId={entry.id} category="invoice" mode="list" title="Facturen" accept="application/pdf,image/*" uploadedBy={me?.display_name} />
-      <FileSection projectId={project.id} entryId={entry.id} category="picture" mode="gallery" title="Inspiratie" accept="image/*,video/mp4,application/pdf" uploadedBy={me?.display_name} />
+      <InspirationBoard
+        entry={entry}
+        onSave={(url) => patchEntry(entry.id, { pinterest_url: url })}
+        projectId={project.id}
+        entryId={entry.id}
+        uploadedBy={me?.display_name}
+      />
     </div>
   )
 }
