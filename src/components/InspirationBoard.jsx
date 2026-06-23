@@ -2,19 +2,27 @@ import { useEffect, useRef, useState } from 'react'
 import FileSection from './FileSection'
 import { loadPinterestWidget, buildPins, parseBoardUrl } from '../lib/pinterest'
 
-// Renders the embedded Pinterest board. The embedBoard anchor's own text doubles as
-// the fallback link: if the widget can't build (private/invalid board, script blocked),
-// the anchor simply stays a clickable link instead of becoming a dead area.
+// Renders the embedded Pinterest board. The embedBoard anchor is written into a
+// ref'd container via innerHTML (NOT JSX) so that Pinterest's script can replace it
+// with the rendered grid without React reconciling/wiping that DOM on re-render.
+// The anchor's own text doubles as the fallback link for private/invalid boards.
 function BoardEmbed({ href }) {
   const ref = useRef(null)
-  const [loaded, setLoaded] = useState(true)
+  const [failed, setFailed] = useState(false)
 
   useEffect(() => {
     let cancelled = false
+    const el = ref.current
+    if (el) {
+      const safe = href.replace(/"/g, '&quot;')
+      el.innerHTML =
+        `<a data-pin-do="embedBoard" data-pin-board-width="640" data-pin-scale-height="340" ` +
+        `data-pin-scale-width="92" href="${safe}">Inspiratieboard op Pinterest</a>`
+    }
     loadPinterestWidget().then((ok) => {
       if (cancelled) return
-      setLoaded(ok)
-      if (ok) buildPins()
+      if (!ok) setFailed(true)
+      else buildPins()
     })
     return () => {
       cancelled = true
@@ -22,20 +30,12 @@ function BoardEmbed({ href }) {
   }, [href])
 
   return (
-    <div className="pinboard-embed" ref={ref}>
-      <a
-        data-pin-do="embedBoard"
-        data-pin-board-width="640"
-        data-pin-scale-height="340"
-        data-pin-scale-width="92"
-        href={href}
-      >
-        Inspiratieboard op Pinterest
-      </a>
-      {!loaded && (
+    <>
+      <div className="pinboard-embed" ref={ref} />
+      {failed && (
         <p className="pinboard-hint">Pinterest kon niet geladen worden — gebruik de link hierboven.</p>
       )}
-    </div>
+    </>
   )
 }
 

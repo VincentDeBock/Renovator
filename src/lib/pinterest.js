@@ -26,7 +26,6 @@ export function loadPinterestWidget() {
       script.src = SCRIPT_SRC
       script.async = true
       script.defer = true
-      script.setAttribute('data-pin-build', 'doBuild') // avoid auto-parsing; we build manually
       script.onload = () => waitForPinUtils()
       script.onerror = () => ready(false)
       document.body.appendChild(script)
