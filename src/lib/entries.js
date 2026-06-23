@@ -181,6 +181,8 @@ function sanitizePatch(patch) {
       out[key] = Number(value) || 0
     } else if (key === 'version_ids') {
       out[key] = Array.isArray(value) ? value.map((v) => String(v)) : []
+    } else if (key === 'pinterest_url') {
+      out[key] = value ? String(value) : null
     }
   }
   return out

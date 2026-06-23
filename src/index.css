@@ -1322,6 +1322,19 @@ body {
 }
 .description:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 
+/* Inspiration: Pinterest board embed + link form */
+.pinboard .pinboard-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.pinboard-btn { font-size: 12px; padding: 5px 12px; min-height: 32px; }
+.pinboard-embed { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80px; gap: 8px; }
+.pinboard-embed > a { color: var(--accent); font-weight: 600; text-decoration: none; }
+.pinboard-embed > a:hover { text-decoration: underline; }
+.pinboard-form { display: flex; flex-direction: column; gap: 8px; }
+.pinboard-input-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.pinboard-input { flex: 1 1 280px; font: inherit; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; min-height: 40px; background: #fff; }
+.pinboard-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.pinboard-hint { margin: 2px 0 0; font-size: 12px; color: var(--muted); }
+.pinboard-err { margin: 2px 0 0; font-size: 13px; color: var(--err); font-weight: 600; }
+
 /* Documenten */
 .docs-toolbar { display: flex; gap: 16px; margin-bottom: 12px; flex-wrap: wrap; }
 .docs-toolbar label { font-size: 13px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
