@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useLang, LangToggle } from '../i18n'
 
 // Login-only screen. There is no registration or reset here by design — the two
 // accounts are created in the Supabase dashboard.
 export default function Login() {
   const { signIn } = useAuth()
+  const { t } = useLang()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
@@ -18,7 +20,7 @@ export default function Login() {
     const err = await signIn(email.trim(), password)
     setSubmitting(false)
     if (err) {
-      setError(messageFor(err))
+      setError(t(keyFor(err)))
     }
     // On success the auth listener flips the gate to the app — nothing to do here.
   }
@@ -26,11 +28,14 @@ export default function Login() {
   return (
     <div className="login">
       <form className="login-card" onSubmit={onSubmit} noValidate>
+        <div className="login-lang">
+          <LangToggle />
+        </div>
         <h1 className="login-title">Renotrack</h1>
-        <p className="login-sub">Meld je aan om verder te gaan</p>
+        <p className="login-sub">{t('login.sub')}</p>
 
         <label className="field">
-          <span className="field-label">E-mail</span>
+          <span className="field-label">{t('login.email')}</span>
           <input
             type="email"
             inputMode="email"
@@ -44,7 +49,7 @@ export default function Login() {
         </label>
 
         <label className="field">
-          <span className="field-label">Wachtwoord</span>
+          <span className="field-label">{t('login.password')}</span>
           <input
             type="password"
             autoComplete="current-password"
@@ -61,21 +66,17 @@ export default function Login() {
         )}
 
         <button type="submit" className="login-submit" disabled={submitting}>
-          {submitting ? 'Bezig…' : 'Aanmelden'}
+          {submitting ? t('common.busy') : t('login.submit')}
         </button>
       </form>
     </div>
   )
 }
 
-// Map Supabase auth errors to a clear, friendly message.
-function messageFor(error) {
+// Map Supabase auth errors to a translation key for a clear, friendly message.
+function keyFor(error) {
   const msg = (error?.message || '').toLowerCase()
-  if (msg.includes('invalid login credentials')) {
-    return 'E-mail of wachtwoord klopt niet.'
-  }
-  if (msg.includes('email not confirmed')) {
-    return 'Dit account is nog niet bevestigd.'
-  }
-  return 'Aanmelden mislukt. Probeer het opnieuw.'
+  if (msg.includes('invalid login credentials')) return 'login.errCredentials'
+  if (msg.includes('email not confirmed')) return 'login.errUnconfirmed'
+  return 'login.errGeneric'
 }

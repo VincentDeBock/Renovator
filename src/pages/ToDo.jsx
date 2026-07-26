@@ -1,14 +1,19 @@
 import { useMemo } from 'react'
 import TaskTable from '../components/TaskTable'
 import { buildItemOptions } from '../lib/itemOptions'
+import { useLang } from '../i18n'
 
 export default function ToDo({ project, entries, profiles, currentUserId }) {
-  const itemOptions = useMemo(() => buildItemOptions(entries), [entries])
+  const { t } = useLang()
+  const itemOptions = useMemo(
+    () => buildItemOptions(entries, { section: t('common.section'), unnamed: t('common.unnamedItem') }),
+    [entries, t],
+  )
   return (
     <div className="page">
       <header className="page-header">
-        <h1>Taken</h1>
-        <p className="subtitle">Beheer en volg jullie taken</p>
+        <h1>{t('tasks.pageTitle')}</h1>
+        <p className="subtitle">{t('tasks.pageSub')}</p>
       </header>
       <div className="panel">
         <TaskTable

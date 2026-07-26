@@ -1,26 +1,27 @@
 import { useEffect, useMemo, useState } from 'react'
 import Icon from '../components/Icon'
 import { getEmailSummaries } from '../lib/communicatie'
+import { useLang } from '../i18n'
 
 const TZ = 'Europe/Brussels'
-const CATEGORY = {
-  quote: 'Offerte',
-  invoice: 'Factuur',
-  architect: 'Architect',
-  other: 'Overig',
+const CATEGORY_KEY = {
+  quote: 'cat.quote',
+  invoice: 'cat.invoice',
+  architect: 'cat.architect',
+  other: 'cat.other',
 }
 const POINTS_SHOWN = 3
 
 // --- Date helpers (all in the Brussels calendar) ---------------------------
 const brussels = (iso) => new Date(new Date(iso).toLocaleString('en-US', { timeZone: TZ }))
 
-const timeLabel = (iso) =>
-  new Date(iso).toLocaleTimeString('nl-BE', { timeZone: TZ, hour: '2-digit', minute: '2-digit' })
-const weekdayShort = (iso) =>
-  new Date(iso).toLocaleDateString('nl-BE', { timeZone: TZ, weekday: 'short' }).replace('.', '')
+const timeLabel = (iso, locale) =>
+  new Date(iso).toLocaleTimeString(locale, { timeZone: TZ, hour: '2-digit', minute: '2-digit' })
+const weekdayShort = (iso, locale) =>
+  new Date(iso).toLocaleDateString(locale, { timeZone: TZ, weekday: 'short' }).replace('.', '')
 const dayNum = (iso) => brussels(iso).getDate()
-const monthShort = (iso) =>
-  new Date(iso).toLocaleDateString('nl-BE', { timeZone: TZ, month: 'short' }).replace('.', '')
+const monthShort = (iso, locale) =>
+  new Date(iso).toLocaleDateString(locale, { timeZone: TZ, month: 'short' }).replace('.', '')
 
 // Monday 00:00 of the week that contains `iso`, as a Brussels-local Date.
 function weekStart(iso) {
@@ -31,11 +32,11 @@ function weekStart(iso) {
 }
 const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
-function weekLabel(start) {
+function weekLabel(start, locale) {
   const end = new Date(start)
   end.setDate(end.getDate() + 6)
   const sameMonth = start.getMonth() === end.getMonth()
-  const m = (d) => d.toLocaleDateString('nl-BE', { month: 'long' })
+  const m = (d) => d.toLocaleDateString(locale, { month: 'long' })
   const left = sameMonth ? `${start.getDate()}` : `${start.getDate()} ${m(start)}`
   return `${left} – ${end.getDate()} ${m(end)}`
 }
@@ -45,6 +46,7 @@ function gmailLink(rfc822) {
 }
 
 function MailRow({ s }) {
+  const { t, locale } = useLang()
   const [open, setOpen] = useState(false)
   const points = Array.isArray(s.key_points) ? s.key_points : []
   const hasMore = points.length > POINTS_SHOWN
@@ -53,20 +55,20 @@ function MailRow({ s }) {
   return (
     <article className={`cw-row ${s.action_needed ? 'cw-row--action' : ''}`}>
       <div className="cw-date" aria-hidden="true">
-        <span className="cw-date-wd">{weekdayShort(s.received_at)}</span>
+        <span className="cw-date-wd">{weekdayShort(s.received_at, locale)}</span>
         <span className="cw-date-d">{dayNum(s.received_at)}</span>
-        <span className="cw-date-m">{monthShort(s.received_at)}</span>
+        <span className="cw-date-m">{monthShort(s.received_at, locale)}</span>
       </div>
 
       <div className="cw-main">
         <div className="cw-meta">
-          <span className="cw-sender">{s.sender || 'Onbekende afzender'}</span>
-          <span className="cw-time">{timeLabel(s.received_at)}</span>
-          {s.action_needed && <span className="cw-flag">Actie nodig</span>}
-          <span className={`cat-badge cat-badge--${s.category}`}>{CATEGORY[s.category] || 'Overig'}</span>
+          <span className="cw-sender">{s.sender || t('cw.unknownSender')}</span>
+          <span className="cw-time">{timeLabel(s.received_at, locale)}</span>
+          {s.action_needed && <span className="cw-flag">{t('cw.actionNeeded')}</span>}
+          <span className={`cat-badge cat-badge--${s.category}`}>{t(CATEGORY_KEY[s.category] || 'cat.other')}</span>
         </div>
 
-        <h3 className="cw-subject">{s.subject || '(geen onderwerp)'}</h3>
+        <h3 className="cw-subject">{s.subject || t('cw.noSubject')}</h3>
 
         {points.length > 0 ? (
           <>
@@ -77,7 +79,7 @@ function MailRow({ s }) {
             </ul>
             {hasMore && (
               <button type="button" className="cw-more" onClick={() => setOpen((v) => !v)}>
-                {open ? 'Toon minder' : `+${points.length - POINTS_SHOWN} meer`}
+                {open ? t('cw.showLess') : t('cw.showMore', { n: points.length - POINTS_SHOWN })}
               </button>
             )}
           </>
@@ -93,7 +95,7 @@ function MailRow({ s }) {
           )}
           {s.rfc822_message_id && (
             <a className="cw-link" href={gmailLink(s.rfc822_message_id)} target="_blank" rel="noreferrer">
-              Open in Gmail →
+              {t('cw.openGmail')}
             </a>
           )}
         </div>
@@ -103,6 +105,7 @@ function MailRow({ s }) {
 }
 
 export default function Communicatie() {
+  const { t, locale } = useLang()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -162,8 +165,8 @@ export default function Communicatie() {
   return (
     <div className="page">
       <header className="page-header">
-        <h1>Communicatie</h1>
-        <p className="subtitle">Wekelijks overzicht van je Verbouwing-mailbox</p>
+        <h1>{t('cw.title')}</h1>
+        <p className="subtitle">{t('cw.sub')}</p>
       </header>
 
       {error && (
@@ -172,11 +175,11 @@ export default function Communicatie() {
           <button className="banner-close" onClick={() => setError(null)}>✕</button>
         </div>
       )}
-      {loading && <div className="empty">Laden…</div>}
+      {loading && <div className="empty">{t('common.loading')}</div>}
 
       {!loading && !error && (
         <>
-          {weeks.length === 0 && <div className="empty">Nog geen communicatie samengevat.</div>}
+          {weeks.length === 0 && <div className="empty">{t('cw.empty')}</div>}
 
           {current && (() => {
             const isThisWeek = ymd(current.start) === thisWeekKey
@@ -189,20 +192,20 @@ export default function Communicatie() {
                     className="cw-nav-btn"
                     onClick={goOlder}
                     disabled={atOldest}
-                    aria-label="Vorige week"
-                    title="Vorige week"
+                    aria-label={t('cw.prevWeek')}
+                    title={t('cw.prevWeek')}
                   >
                     <Icon name="back" size={18} />
                   </button>
 
                   <div className="cw-nav-center">
                     <h2 className="cw-week-title">
-                      {isThisWeek ? 'Deze week' : 'Week van'}{' '}
-                      <span className="cw-week-range">{weekLabel(current.start)}</span>
+                      {isThisWeek ? t('cw.thisWeek') : t('cw.weekOf')}{' '}
+                      <span className="cw-week-range">{weekLabel(current.start, locale)}</span>
                     </h2>
                     <div className="cw-week-meta">
-                      <span>{current.items.length} {current.items.length === 1 ? 'bericht' : 'berichten'}</span>
-                      {actions > 0 && <span className="cw-week-actions">{actions}× actie nodig</span>}
+                      <span>{t(current.items.length === 1 ? 'cw.messageOne' : 'cw.messageMany', { n: current.items.length })}</span>
+                      {actions > 0 && <span className="cw-week-actions">{t('cw.actionsCount', { n: actions })}</span>}
                     </div>
                   </div>
 
@@ -211,8 +214,8 @@ export default function Communicatie() {
                     className="cw-nav-btn"
                     onClick={goNewer}
                     disabled={atNewest}
-                    aria-label="Volgende week"
-                    title="Volgende week"
+                    aria-label={t('cw.nextWeek')}
+                    title={t('cw.nextWeek')}
                   >
                     <Icon name="forward" size={18} />
                   </button>
@@ -220,11 +223,11 @@ export default function Communicatie() {
 
                 <div className="cw-weekpick">
                   <label>
-                    Spring naar week:{' '}
+                    {t('cw.jumpToWeek')}{' '}
                     <select value={weekIndex} onChange={(e) => setWeekIndex(Number(e.target.value))}>
                       {weeks.map((w, i) => (
                         <option key={ymd(w.start)} value={i}>
-                          {ymd(w.start) === thisWeekKey ? 'Deze week' : weekLabel(w.start)} ({w.items.length})
+                          {ymd(w.start) === thisWeekKey ? t('cw.thisWeek') : weekLabel(w.start, locale)} ({w.items.length})
                         </option>
                       ))}
                     </select>

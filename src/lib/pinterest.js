@@ -47,30 +47,32 @@ export function buildPins() {
 
 const RESERVED = new Set(['pin', 'search', 'ideas', 'today', 'categories', 'settings', 'business'])
 
-// Validate + normalize a Pinterest BOARD url. Returns { ok, href } or { ok:false, reason }.
+// Validate + normalize a Pinterest BOARD url. Returns { ok, href } or
+// { ok:false, reason } where `reason` is a translation key (see src/i18n),
+// translated at render time so it follows the active language.
 export function parseBoardUrl(raw) {
   const input = String(raw || '').trim()
-  if (!input) return { ok: false, reason: 'Geen URL ingevuld.' }
+  if (!input) return { ok: false, reason: 'pin.err.empty' }
   let url
   try {
     url = new URL(input)
   } catch {
-    return { ok: false, reason: 'Dit lijkt geen geldige URL.' }
+    return { ok: false, reason: 'pin.err.invalidUrl' }
   }
   const host = url.hostname.toLowerCase()
   if (host === 'pin.it') {
-    return { ok: false, reason: 'pin.it-kortlinks kunnen niet ingebed worden — gebruik de volledige board-URL.' }
+    return { ok: false, reason: 'pin.err.shortlink' }
   }
   if (!/(^|\.)pinterest\.[a-z.]+$/.test(host)) {
-    return { ok: false, reason: 'Geef een pinterest.com board-URL.' }
+    return { ok: false, reason: 'pin.err.notPinterest' }
   }
   const segments = url.pathname.split('/').filter(Boolean)
   if (segments.length < 2) {
-    return { ok: false, reason: 'Dit lijkt een profiel, geen board. Open het board zelf en kopieer die URL.' }
+    return { ok: false, reason: 'pin.err.profile' }
   }
   const [user, board] = segments
   if (RESERVED.has(user.toLowerCase()) || user.startsWith('_') || board.startsWith('_')) {
-    return { ok: false, reason: 'Dit is geen board-URL. Open het board en kopieer de link.' }
+    return { ok: false, reason: 'pin.err.notBoard' }
   }
   // Normalize to a clean board href (drop section/query/hash), keep the original domain.
   const href = `${url.protocol}//${host}/${user}/${board}/`

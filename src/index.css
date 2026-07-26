@@ -1711,3 +1711,35 @@ body {
 .cat-badge--invoice { background: var(--gold-bg); color: var(--gold); }
 .cat-badge--architect { background: var(--indigo-bg); color: var(--indigo); }
 .cat-badge--other { background: var(--off-bg); color: var(--muted); }
+
+/* Language toggle (NL | EN). Deep-linkable via ?lang=en. */
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: var(--line-soft);
+  border-radius: var(--r-pill);
+}
+.lang-toggle-btn {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--faint);
+  background: transparent;
+  border: 0;
+  border-radius: var(--r-pill);
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.lang-toggle-btn:hover { color: var(--ink); }
+.lang-toggle-btn--active {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(40, 30, 20, 0.08);
+}
+
+/* Toggle placement on the login card */
+.login-lang { display: flex; justify-content: flex-end; margin-bottom: 4px; }

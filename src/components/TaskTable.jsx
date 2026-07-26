@@ -2,14 +2,15 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import EditableCell from './EditableCell'
 import Icon from './Icon'
 import { getTasks, makeTask, insertTask, updateTask, deleteTask } from '../lib/tasks'
+import { useLang } from '../i18n'
 
 const PRIO_RANK = { high: 0, medium: 1, low: 2 }
 
-function OwnerCell({ ownerId, profiles, onChange }) {
+function OwnerCell({ ownerId, profiles, onChange, nobodyLabel }) {
   const p = profiles.find((x) => x.id === ownerId)
   return (
     <span className="owner">
-      <span className="owner-avatar" title={p?.display_name || 'Niemand'}>{p?.initial || '?'}</span>
+      <span className="owner-avatar" title={p?.display_name || nobodyLabel}>{p?.initial || '?'}</span>
       <select className="owner-select" value={ownerId || ''} onChange={(e) => onChange(e.target.value || null)}>
         <option value="">—</option>
         {profiles.map((pr) => (
@@ -25,6 +26,7 @@ function OwnerCell({ ownerId, profiles, onChange }) {
 // cell so long "Section / Item" paths stay fully readable. Grouped by section,
 // the way Linear/Asana surface long reference lists.
 function ItemSelect({ value, options, onChange }) {
+  const { t } = useLang()
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   const selected = options.find((o) => o.id === value)
@@ -66,7 +68,7 @@ function ItemSelect({ value, options, onChange }) {
             <span className="itempick-item">{selected.item}</span>
           </span>
         ) : (
-          <span className="itempick-placeholder">Koppel item</span>
+          <span className="itempick-placeholder">{t('tasks.linkItem')}</span>
         )}
         <Icon name="chevron" size={14} className="itempick-caret" />
       </button>
@@ -78,7 +80,7 @@ function ItemSelect({ value, options, onChange }) {
             className={`itempick-opt itempick-opt--none ${!value ? 'is-selected' : ''}`}
             onClick={() => pick(null)}
           >
-            Geen item
+            {t('tasks.noItem')}
           </button>
           {groups.map(([section, opts]) => (
             <div key={section} className="itempick-group">
@@ -104,7 +106,10 @@ function ItemSelect({ value, options, onChange }) {
 
 // Reusable tasks table. When entryId is set, tasks are scoped to that item, new
 // tasks auto-link to it, and the Item column is hidden.
+// NOTE: the translate function is named `tr` here because rows are mapped as
+// `(t) => …` (task), which would shadow the usual `t`.
 export default function TaskTable({ projectId, entryId = null, profiles, currentUserId, itemOptions = [] }) {
+  const { t: tr } = useLang()
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [showCompleted, setShowCompleted] = useState(false)
@@ -148,7 +153,7 @@ export default function TaskTable({ projectId, entryId = null, profiles, current
       setTasks((rows) => rows.map((t) => (t.id === id ? { ...t, ...saved } : t)))
     } catch (e) {
       setTasks(snap)
-      setError(`Opslaan mislukt: ${e.message}`)
+      setError(tr('op.saveFailed', { msg: e.message }))
     }
   }
 
@@ -161,7 +166,7 @@ export default function TaskTable({ projectId, entryId = null, profiles, current
       setTasks((rows) => rows.map((t) => (t.id === row.id ? saved : t)))
     } catch (e) {
       setTasks(snap)
-      setError(`Taak toevoegen mislukt: ${e.message}`)
+      setError(tr('op.addTaskFailed', { msg: e.message }))
     }
   }
 
@@ -172,7 +177,7 @@ export default function TaskTable({ projectId, entryId = null, profiles, current
       await deleteTask(id)
     } catch (e) {
       setTasks(snap)
-      setError(`Verwijderen mislukt: ${e.message}`)
+      setError(tr('op.deleteFailed', { msg: e.message }))
     }
   }
 
@@ -197,7 +202,7 @@ export default function TaskTable({ projectId, entryId = null, profiles, current
             onChange={(e) => setShowCompleted(e.target.checked)}
           />
           <span className="toggle-track" aria-hidden="true"><span className="toggle-thumb" /></span>
-          <span className="toggle-text">Voltooide taken tonen</span>
+          <span className="toggle-text">{tr('tasks.showCompleted')}</span>
         </label>
       </div>
 
@@ -206,44 +211,44 @@ export default function TaskTable({ projectId, entryId = null, profiles, current
       <div className="tasktable">
         <div className={`trow trow--head ${entryId ? 'trow--scoped' : ''}`}>
           <div className="tcell tcell--check" />
-          <div className="tcell tcell--title"><SortHead k="title">Taak</SortHead></div>
-          {!entryId && <div className="tcell tcell--item">Item</div>}
-          <div className="tcell tcell--owner"><SortHead k="owner">Eigenaar</SortHead></div>
-          <div className="tcell tcell--prio"><SortHead k="priority">Prioriteit</SortHead></div>
-          <div className="tcell tcell--deadline"><SortHead k="deadline">Deadline</SortHead></div>
+          <div className="tcell tcell--title"><SortHead k="title">{tr('tasks.colTask')}</SortHead></div>
+          {!entryId && <div className="tcell tcell--item">{tr('common.item')}</div>}
+          <div className="tcell tcell--owner"><SortHead k="owner">{tr('tasks.colOwner')}</SortHead></div>
+          <div className="tcell tcell--prio"><SortHead k="priority">{tr('tasks.colPriority')}</SortHead></div>
+          <div className="tcell tcell--deadline"><SortHead k="deadline">{tr('tasks.colDeadline')}</SortHead></div>
           <div className="tcell tcell--act" />
         </div>
 
-        {loading && <div className="empty">Laden…</div>}
-        {!loading && visible.length === 0 && <div className="empty">Nog geen taken.</div>}
+        {loading && <div className="empty">{tr('common.loading')}</div>}
+        {!loading && visible.length === 0 && <div className="empty">{tr('tasks.empty')}</div>}
 
         {visible.map((t) => (
           <div key={t.id} className={`trow ${entryId ? 'trow--scoped' : ''} ${t.completed ? 'trow--done' : ''}`}>
             <div className="tcell tcell--check">
               <label className="task-check">
-                <input type="checkbox" checked={t.completed} onChange={(e) => patch(t.id, { completed: e.target.checked })} aria-label="Voltooid" />
+                <input type="checkbox" checked={t.completed} onChange={(e) => patch(t.id, { completed: e.target.checked })} aria-label={tr('tasks.completedAria')} />
                 <span className="task-check-box" aria-hidden="true"><Icon name="check" size={13} strokeWidth={3} /></span>
               </label>
             </div>
-            <div className="tcell tcell--title" data-label="Taak">
-              <EditableCell value={t.title} placeholder="Nieuwe taak" ariaLabel="Taak" onSave={(v) => patch(t.id, { title: v })} />
+            <div className="tcell tcell--title" data-label={tr('tasks.colTask')}>
+              <EditableCell value={t.title} placeholder={tr('tasks.newTaskPlaceholder')} ariaLabel={tr('tasks.colTask')} onSave={(v) => patch(t.id, { title: v })} />
             </div>
             {!entryId && (
-              <div className="tcell tcell--item" data-label="Item">
+              <div className="tcell tcell--item" data-label={tr('common.item')}>
                 <ItemSelect value={t.entry_id || null} options={itemOptions} onChange={(v) => patch(t.id, { entry_id: v })} />
               </div>
             )}
-            <div className="tcell tcell--owner" data-label="Eigenaar">
-              <OwnerCell ownerId={t.owner_id} profiles={profiles} onChange={(v) => patch(t.id, { owner_id: v })} />
+            <div className="tcell tcell--owner" data-label={tr('tasks.colOwner')}>
+              <OwnerCell ownerId={t.owner_id} profiles={profiles} nobodyLabel={tr('tasks.nobody')} onChange={(v) => patch(t.id, { owner_id: v })} />
             </div>
-            <div className="tcell tcell--prio" data-label="Prioriteit">
+            <div className="tcell tcell--prio" data-label={tr('tasks.colPriority')}>
               <select className={`prio-pill prio-pill--${t.priority}`} value={t.priority} onChange={(e) => patch(t.id, { priority: e.target.value })}>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
+                <option value="high">{tr('tasks.prioHigh')}</option>
+                <option value="medium">{tr('tasks.prioMedium')}</option>
+                <option value="low">{tr('tasks.prioLow')}</option>
               </select>
             </div>
-            <div className="tcell tcell--deadline" data-label="Deadline">
+            <div className="tcell tcell--deadline" data-label={tr('tasks.colDeadline')}>
               <span className={`date-field ${t.deadline ? '' : 'date-field--empty'}`}>
                 <Icon name="calendar" size={15} className="date-field-icon" />
                 <input
@@ -256,13 +261,13 @@ export default function TaskTable({ projectId, entryId = null, profiles, current
               </span>
             </div>
             <div className="tcell tcell--act">
-              <button type="button" className="btn-icon" title="Taak verwijderen" onClick={() => remove(t.id)}><Icon name="trash" size={16} /></button>
+              <button type="button" className="btn-icon" title={tr('tasks.deleteTask')} onClick={() => remove(t.id)}><Icon name="trash" size={16} /></button>
             </div>
           </div>
         ))}
       </div>
 
-      <button type="button" className="btn-add-item tasks-add" onClick={add}><Icon name="plus" size={15} /> Taak toevoegen</button>
+      <button type="button" className="btn-add-item tasks-add" onClick={add}><Icon name="plus" size={15} /> {tr('tasks.addTask')}</button>
     </div>
   )
 }

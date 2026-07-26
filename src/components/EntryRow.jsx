@@ -6,10 +6,11 @@ import EditableCell from './EditableCell'
 import Icon from './Icon'
 import { sectionAmounts, verschil } from '../lib/totals'
 import { formatEuro } from '../lib/format'
+import { useLang } from '../i18n'
 
-function DragHandle({ attributes, listeners }) {
+function DragHandle({ attributes, listeners, label }) {
   return (
-    <button type="button" className="drag-handle" aria-label="Versleep om te ordenen" {...attributes} {...listeners}>
+    <button type="button" className="drag-handle" aria-label={label} {...attributes} {...listeners}>
       <Icon name="grip" size={16} />
     </button>
   )
@@ -26,16 +27,17 @@ function IncludeToggle({ checked, onChange, label }) {
   )
 }
 
-function VerschilCell({ amounts }) {
+function VerschilCell({ amounts, label }) {
   const v = verschil(amounts)
   return (
-    <div className="cell cell--amount" data-label="Verschil">
+    <div className="cell cell--amount" data-label={label}>
       <span className={`amount-rollup ${v < 0 ? 'amount--over' : ''}`}>{formatEuro(v)}</span>
     </div>
   )
 }
 
 function ItemRow({ item, onUpdateItem, onRequestDelete }) {
+  const { t } = useLang()
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: item.id, data: { type: 'item', parentId: item.parent_id } })
   const style = { transform: CSS.Transform.toString(transform), transition }
@@ -47,37 +49,37 @@ function ItemRow({ item, onUpdateItem, onRequestDelete }) {
       className={`row row--item grid ${!item.included ? 'row--off' : ''} ${isDragging ? 'row--dragging' : ''}`}
     >
       <div className="cell cell--drag">
-        <DragHandle attributes={attributes} listeners={listeners} />
+        <DragHandle attributes={attributes} listeners={listeners} label={t('ov.dragAria')} />
       </div>
 
-      <div className="cell cell--name" data-label="Item">
+      <div className="cell cell--name" data-label={t('common.item')}>
         <Link className="item-link" to={`/item/${item.id}`}>
-          {item.name?.trim() || 'Naamloos item'}
+          {item.name?.trim() || t('common.unnamedItem')}
         </Link>
       </div>
 
-      <div className="cell cell--amount" data-label="Offerte">
+      <div className="cell cell--amount" data-label={t('ov.colQuote')}>
         <EditableCell
           kind="amount"
           value={item.offertes}
-          ariaLabel={`Offerte ${item.name || 'item'}`}
+          ariaLabel={`${t('ov.colQuote')} ${item.name || t('common.item')}`}
           onSave={(val) => onUpdateItem(item.id, { offertes: val })}
         />
       </div>
-      <div className="cell cell--amount" data-label="Factuur">
+      <div className="cell cell--amount" data-label={t('ov.colInvoice')}>
         <EditableCell
           kind="amount"
           value={item.facturen}
-          ariaLabel={`Factuur ${item.name || 'item'}`}
+          ariaLabel={`${t('ov.colInvoice')} ${item.name || t('common.item')}`}
           onSave={(val) => onUpdateItem(item.id, { facturen: val })}
         />
       </div>
-      <VerschilCell amounts={item} />
+      <VerschilCell amounts={item} label={t('ov.colDiff')} />
 
-      <div className="cell cell--incl" data-label="Meetellen">
+      <div className="cell cell--incl" data-label={t('ov.colInclude')}>
         <IncludeToggle
           checked={item.included}
-          label={`Item ${item.name || ''} meetellen`}
+          label={t('ov.includeItemAria', { name: item.name || '' })}
           onChange={(on) => onUpdateItem(item.id, { included: on })}
         />
       </div>
@@ -86,8 +88,8 @@ function ItemRow({ item, onUpdateItem, onRequestDelete }) {
         <button
           type="button"
           className="btn-icon"
-          title="Item verwijderen"
-          aria-label={`Item ${item.name || ''} verwijderen`}
+          title={t('ov.deleteItemTitle')}
+          aria-label={t('ov.deleteItemAria', { name: item.name || '' })}
           onClick={() => onRequestDelete({ id: item.id, type: 'item', name: item.name })}
         >
           <Icon name="trash" size={16} />
@@ -106,6 +108,7 @@ export default function SectionGroup({
   onAddItem,
   onUpdateItem,
 }) {
+  const { t } = useLang()
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: section.id, data: { type: 'section' } })
   const style = { transform: CSS.Transform.toString(transform), transition }
@@ -119,49 +122,51 @@ export default function SectionGroup({
     <div className={`group ${!section.included ? 'group--off' : ''} ${isDragging ? 'group--dragging' : ''}`}>
       <div ref={setNodeRef} style={style} className="row row--section grid">
         <div className="cell cell--drag">
-          <DragHandle attributes={attributes} listeners={listeners} />
+          <DragHandle attributes={attributes} listeners={listeners} label={t('ov.dragAria')} />
         </div>
 
-        <div className="cell cell--name" data-label="Sectie">
+        <div className="cell cell--name" data-label={t('common.section')}>
           <button
             type="button"
             className={`chevron ${collapsed ? 'chevron--collapsed' : ''}`}
-            aria-label={collapsed ? 'Sectie openklappen' : 'Sectie inklappen'}
+            aria-label={collapsed ? t('ov.expandSection') : t('ov.collapseSection')}
             onClick={() => onToggleCollapse(section.id)}
           >
             <Icon name="chevron" size={16} />
           </button>
           <EditableCell
             value={section.name}
-            placeholder="Naam sectie"
-            ariaLabel="Naam sectie"
+            placeholder={t('ov.sectionNamePlaceholder')}
+            ariaLabel={t('ov.sectionNamePlaceholder')}
             onSave={(name) => onUpdate(section.id, { name })}
           />
           {hasItems && (
-            <span className="section-count">{items.length} {items.length === 1 ? 'item' : 'items'}</span>
+            <span className="section-count">
+              {t(items.length === 1 ? 'ov.itemCountOne' : 'ov.itemCountMany', { n: items.length })}
+            </span>
           )}
         </div>
 
-        <div className="cell cell--amount" data-label="Offerte">
+        <div className="cell cell--amount" data-label={t('ov.colQuote')}>
           {hasItems ? (
             <span className="amount-rollup">{formatEuro(rollup.offertes)}</span>
           ) : (
-            <EditableCell kind="amount" value={section.offertes} ariaLabel="Offerte sectie" onSave={(v) => onUpdate(section.id, { offertes: v })} />
+            <EditableCell kind="amount" value={section.offertes} ariaLabel={t('ov.quoteSectionAria')} onSave={(v) => onUpdate(section.id, { offertes: v })} />
           )}
         </div>
-        <div className="cell cell--amount" data-label="Factuur">
+        <div className="cell cell--amount" data-label={t('ov.colInvoice')}>
           {hasItems ? (
             <span className="amount-rollup">{formatEuro(rollup.facturen)}</span>
           ) : (
-            <EditableCell kind="amount" value={section.facturen} ariaLabel="Factuur sectie" onSave={(v) => onUpdate(section.id, { facturen: v })} />
+            <EditableCell kind="amount" value={section.facturen} ariaLabel={t('ov.invoiceSectionAria')} onSave={(v) => onUpdate(section.id, { facturen: v })} />
           )}
         </div>
-        <VerschilCell amounts={rollup} />
+        <VerschilCell amounts={rollup} label={t('ov.colDiff')} />
 
-        <div className="cell cell--incl" data-label="Meetellen">
+        <div className="cell cell--incl" data-label={t('ov.colInclude')}>
           <IncludeToggle
             checked={section.included}
-            label={`Sectie ${section.name || ''} meetellen`}
+            label={t('ov.includeSectionAria', { name: section.name || '' })}
             onChange={(on) => onUpdate(section.id, { included: on })}
           />
         </div>
@@ -170,8 +175,8 @@ export default function SectionGroup({
           <button
             type="button"
             className="btn-icon"
-            title="Sectie verwijderen"
-            aria-label={`Sectie ${section.name || ''} verwijderen`}
+            title={t('ov.deleteSectionTitle')}
+            aria-label={t('ov.deleteSectionAria', { name: section.name || '' })}
             onClick={() => onRequestDelete({ id: section.id, type: 'section', name: section.name })}
           >
             <Icon name="trash" size={16} />
@@ -191,7 +196,7 @@ export default function SectionGroup({
             <div className="cell cell--drag" aria-hidden="true" />
             <div className="cell cell--name">
               <button type="button" className="btn-add-item" onClick={() => onAddItem(section.id)}>
-                <Icon name="plus" size={15} /> Item toevoegen
+                <Icon name="plus" size={15} /> {t('ov.addItem')}
               </button>
             </div>
           </div>

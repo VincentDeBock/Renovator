@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { useLang } from '../i18n'
 
 // Colored tabs for project versions. Click to switch, double-click to rename,
 // "+" duplicates the active version, "×" on the active tab deletes it.
 export default function VersionTabs({ versions, activeId, onSelect, onAdd, onRename, onDelete }) {
+  const { t } = useLang()
   const [editingId, setEditingId] = useState(null)
   const [draft, setDraft] = useState('')
 
@@ -11,13 +13,13 @@ export default function VersionTabs({ versions, activeId, onSelect, onAdd, onRen
     setDraft(v.name)
   }
   function commitRename() {
-    if (editingId) onRename(editingId, draft.trim() || 'Versie')
+    if (editingId) onRename(editingId, draft.trim() || t('ver.fallbackName'))
     setEditingId(null)
   }
 
   return (
-    <div className="vtabs" role="tablist" aria-label="Project versies">
-      <span className="vtabs-label">Project versies</span>
+    <div className="vtabs" role="tablist" aria-label={t('ver.tabsLabel')}>
+      <span className="vtabs-label">{t('ver.tabsLabel')}</span>
       <div className="vtabs-row">
         {versions.map((v) => {
           const active = v.id === activeId
@@ -64,11 +66,11 @@ export default function VersionTabs({ versions, activeId, onSelect, onAdd, onRen
                 <button
                   type="button"
                   className="vtab-del"
-                  title="Versie verwijderen"
-                  aria-label={`Versie ${v.name} verwijderen`}
+                  title={t('ver.deleteTitle')}
+                  aria-label={t('ver.deleteAria', { name: v.name })}
                   onClick={(e) => {
                     e.stopPropagation()
-                    if (window.confirm(`Versie "${v.name}" verwijderen?`)) onDelete(v.id)
+                    if (window.confirm(t('ver.deleteConfirm', { name: v.name }))) onDelete(v.id)
                   }}
                 >
                   ×
@@ -81,8 +83,8 @@ export default function VersionTabs({ versions, activeId, onSelect, onAdd, onRen
         <button
           type="button"
           className="vtab vtab--add"
-          title="Nieuwe versie (kopie van de huidige)"
-          aria-label="Nieuwe versie toevoegen"
+          title={t('ver.addTitle')}
+          aria-label={t('ver.addAria')}
           onClick={onAdd}
         >
           +

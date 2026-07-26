@@ -19,11 +19,13 @@ import {
   updateProject,
 } from './lib/entries'
 import { getProfiles } from './lib/profiles'
+import { useLang } from './i18n'
 
 // Startup guard + shared state. App owns project, entries and profiles and exposes
 // optimistic entry mutations so both Overzicht and the item detail page can edit.
 export default function App() {
   const { user } = useAuth()
+  const { t } = useLang()
   const [status, setStatus] = useState('loading')
   const [project, setProject] = useState(null)
   const [entries, setEntries] = useState([])
@@ -39,7 +41,7 @@ export default function App() {
         if (!proj) {
           if (!cancelled) {
             setStatus('error')
-            setError('Geen project gevonden. Voer supabase/schema.sql uit om er één te zaaien.')
+            setError(t('boot.noProject'))
           }
           return
         }
@@ -70,7 +72,7 @@ export default function App() {
       setEntries((rows) => rows.map((r) => (r.id === id ? { ...r, ...saved } : r)))
     } catch (e) {
       setEntries(snapshot)
-      setOpError(`Opslaan mislukt: ${e.message}`)
+      setOpError(t('op.saveFailed', { msg: e.message }))
     }
   }
 
@@ -81,7 +83,7 @@ export default function App() {
       await deleteEntry(id)
     } catch (e) {
       setEntries(snapshot)
-      setOpError(`Verwijderen mislukt: ${e.message}`)
+      setOpError(t('op.deleteFailed', { msg: e.message }))
     }
   }
 
@@ -99,7 +101,7 @@ export default function App() {
       setEntries((rows) => rows.map((r) => (r.id === row.id ? saved : r)))
     } catch (e) {
       setEntries(snapshot)
-      setOpError(`Sectie toevoegen mislukt: ${e.message}`)
+      setOpError(t('op.addSectionFailed', { msg: e.message }))
     }
   }
 
@@ -117,7 +119,7 @@ export default function App() {
       setEntries((rows) => rows.map((r) => (r.id === row.id ? saved : r)))
     } catch (e) {
       setEntries(snapshot)
-      setOpError(`Item toevoegen mislukt: ${e.message}`)
+      setOpError(t('op.addItemFailed', { msg: e.message }))
     }
   }
 
@@ -129,7 +131,7 @@ export default function App() {
       await updatePositions(orderedIds.map((id, i) => ({ id, position: i })))
     } catch (e) {
       setEntries(snapshot)
-      setOpError(`Volgorde opslaan mislukt: ${e.message}`)
+      setOpError(t('op.orderFailed', { msg: e.message }))
     }
   }
 
@@ -141,7 +143,7 @@ export default function App() {
   if (status === 'loading') {
     return (
       <div className="boot">
-        <div className="boot-card">Verbinden met Supabase…</div>
+        <div className="boot-card">{t('boot.connecting')}</div>
       </div>
     )
   }
@@ -149,7 +151,7 @@ export default function App() {
     return (
       <div className="boot">
         <div className="boot-card boot-card--error">
-          <strong>Geen verbinding.</strong>
+          <strong>{t('boot.noConnection')}</strong>
           <p>{error}</p>
         </div>
       </div>

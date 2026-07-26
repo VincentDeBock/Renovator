@@ -5,10 +5,12 @@ import FileUpload from './FileUpload'
 import FileViewer from './FileViewer'
 import ConfirmDialog from './ConfirmDialog'
 import { listFiles, uploadFile, updateFile, deleteFile } from '../lib/files'
+import { useLang } from '../i18n'
 
 // One category's files (quote/invoice/picture). Self-contained: load, upload,
 // edit (amount/status), view, delete-with-confirm.
 export default function FileSection({ projectId, entryId, category, mode = 'list', title, accept, uploadedBy }) {
+  const { t } = useLang()
   const [files, setFiles] = useState([])
   const [loading, setLoading] = useState(true)
   const [viewer, setViewer] = useState(null)
@@ -31,7 +33,7 @@ export default function FileSection({ projectId, entryId, category, mode = 'list
       const saved = await uploadFile(file, { projectId, entryId, category, uploadedBy })
       setFiles((rows) => [saved, ...rows])
     } catch (e) {
-      setError(`Upload mislukt: ${e.message}`)
+      setError(t('op.uploadFailed', { msg: e.message }))
     }
   }
 
@@ -42,7 +44,7 @@ export default function FileSection({ projectId, entryId, category, mode = 'list
       await updateFile(id, patch)
     } catch (e) {
       setFiles(snap)
-      setError(`Opslaan mislukt: ${e.message}`)
+      setError(t('op.saveFailed', { msg: e.message }))
     }
   }
 
@@ -55,7 +57,7 @@ export default function FileSection({ projectId, entryId, category, mode = 'list
       await deleteFile(file)
     } catch (e) {
       setFiles(snap)
-      setError(`Verwijderen mislukt: ${e.message}`)
+      setError(t('op.deleteFailed', { msg: e.message }))
     }
   }
 
@@ -64,17 +66,17 @@ export default function FileSection({ projectId, entryId, category, mode = 'list
       <div className="panel-head">
         <h2 className="panel-title">{title}</h2>
         {mode === 'gallery' && (
-          <FileUpload onUpload={onUpload} accept={accept} label="+ Foto toevoegen" />
+          <FileUpload onUpload={onUpload} accept={accept} label={t('file.addPhoto')} />
         )}
       </div>
 
       {error && <div className="banner banner--error">{error}<button className="banner-close" onClick={() => setError(null)}>✕</button></div>}
-      {loading && <div className="empty">Laden…</div>}
+      {loading && <div className="empty">{t('common.loading')}</div>}
 
       {mode === 'list' ? (
         <>
           <FileList files={files} onView={setViewer} onUpdate={onUpdate} onRequestDelete={setPendingDelete} />
-          <FileUpload onUpload={onUpload} accept={accept} label="+ Bestand toevoegen" />
+          <FileUpload onUpload={onUpload} accept={accept} label={t('file.addFile')} />
         </>
       ) : (
         <>
@@ -86,8 +88,8 @@ export default function FileSection({ projectId, entryId, category, mode = 'list
       <FileViewer file={viewer} onClose={() => setViewer(null)} />
       <ConfirmDialog
         open={!!pendingDelete}
-        title="Bestand verwijderen"
-        message={`"${pendingDelete?.name}" wordt verwijderd. Dit kan niet ongedaan worden gemaakt.`}
+        title={t('file.deleteTitle')}
+        message={t('file.deleteMsg', { name: pendingDelete?.name })}
         onCancel={() => setPendingDelete(null)}
         onConfirm={confirmDelete}
       />

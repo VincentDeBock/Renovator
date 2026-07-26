@@ -6,11 +6,14 @@ import { fmtSize, fmtDate } from '../components/FileList'
 import { listFiles, setFileTags, uploadFile, updateFile, archiveFile, unarchiveFile, computeHash, findDuplicate, triggerDocAi } from '../lib/files'
 import { getTags } from '../lib/tags'
 import { useAuth } from '../context/AuthContext'
+import { useLang } from '../i18n'
 
-const CATEGORY_LABEL = { quote: 'Offerte', invoice: 'Factuur', picture: 'Foto', plan: 'Plan', other: 'Overig' }
+const CATEGORY_KEY = { quote: 'cat.quote', invoice: 'cat.invoice', picture: 'cat.picture', plan: 'cat.plan', other: 'cat.other' }
 
+// `tr` (not `t`) because tags are mapped as `(t) => …` below.
 export default function Documenten({ project, entries }) {
   const { displayName } = useAuth()
+  const { t: tr, locale } = useLang()
   const [files, setFiles] = useState([])
   const [tags, setTags] = useState([])
   const [loading, setLoading] = useState(true)
@@ -38,9 +41,9 @@ export default function Documenten({ project, entries }) {
   }, [project.id, showArchived])
 
   const itemName = useMemo(() => {
-    const m = new Map(entries.map((e) => [e.id, e.name?.trim() || (e.type === 'section' ? 'Sectie' : 'Item')]))
+    const m = new Map(entries.map((e) => [e.id, e.name?.trim() || (e.type === 'section' ? tr('common.section') : tr('common.item'))]))
     return (id) => (id ? m.get(id) || '—' : null)
-  }, [entries])
+  }, [entries, tr])
 
   // Sections with their items, for the per-row link picker.
   const sections = useMemo(() => {
@@ -89,7 +92,7 @@ export default function Documenten({ project, entries }) {
         refreshTags()
       })
     } catch (e) {
-      setError(`Upload mislukt: ${e.message}`)
+      setError(tr('op.uploadFailed', { msg: e.message }))
     }
   }
 
@@ -104,7 +107,7 @@ export default function Documenten({ project, entries }) {
       }
       await doUpload(file, hash)
     } catch (e) {
-      setError(`Upload mislukt: ${e.message}`)
+      setError(tr('op.uploadFailed', { msg: e.message }))
     }
   }
 
@@ -117,7 +120,7 @@ export default function Documenten({ project, entries }) {
       await setFileTags(file.id, next)
     } catch (e) {
       setFiles(snap)
-      setError(`Tag opslaan mislukt: ${e.message}`)
+      setError(tr('op.tagSaveFailed', { msg: e.message }))
     }
   }
 
@@ -128,7 +131,7 @@ export default function Documenten({ project, entries }) {
       await updateFile(file.id, { entry_id: entryId || null })
     } catch (e) {
       setFiles(snap)
-      setError(`Koppeling opslaan mislukt: ${e.message}`)
+      setError(tr('op.linkSaveFailed', { msg: e.message }))
     }
   }
 
@@ -141,31 +144,31 @@ export default function Documenten({ project, entries }) {
       else await archiveFile(file.id)
     } catch (e) {
       setFiles(snap)
-      setError(`Archiveren mislukt: ${e.message}`)
+      setError(tr('op.archiveFailed', { msg: e.message }))
     }
   }
 
   return (
     <div className="page">
       <header className="page-header">
-        <h1>Documenten</h1>
-        <p className="subtitle">Alle bestanden, filterbaar op tag</p>
+        <h1>{tr('docs.title')}</h1>
+        <p className="subtitle">{tr('docs.sub')}</p>
       </header>
 
       <div className="panel">
         <FileUpload onUpload={onPick} accept="application/pdf,image/*" dropzone />
 
         <div className="docs-toolbar">
-          <label>Filter:
+          <label>{tr('docs.filter')}
             <select value={filterTag} onChange={(e) => setFilterTag(e.target.value)}>
-              <option value="">Alle tags</option>
+              <option value="">{tr('docs.allTags')}</option>
               {tags.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
           </label>
-          <label>Sorteer:
+          <label>{tr('docs.sort')}
             <select value={sortKey} onChange={(e) => setSortKey(e.target.value)}>
-              <option value="date">Nieuwste eerst</option>
-              <option value="name">Naam (A–Z)</option>
+              <option value="date">{tr('docs.newestFirst')}</option>
+              <option value="name">{tr('docs.nameAZ')}</option>
             </select>
           </label>
           <button
@@ -173,13 +176,13 @@ export default function Documenten({ project, entries }) {
             className={`btn-ghost docs-archive-toggle ${showArchived ? 'is-on' : ''}`}
             onClick={() => setShowArchived((v) => !v)}
           >
-            {showArchived ? 'Toon actieve' : 'Toon archief'}
+            {showArchived ? tr('docs.showActive') : tr('docs.showArchive')}
           </button>
         </div>
 
         {error && <div className="banner banner--error">{error}<button className="banner-close" onClick={() => setError(null)}>✕</button></div>}
-        {loading && <div className="empty">Laden…</div>}
-        {!loading && visible.length === 0 && <div className="empty">{showArchived ? 'Geen gearchiveerde documenten.' : 'Geen documenten.'}</div>}
+        {loading && <div className="empty">{tr('common.loading')}</div>}
+        {!loading && visible.length === 0 && <div className="empty">{showArchived ? tr('docs.emptyArchived') : tr('docs.empty')}</div>}
 
         <div className="filelist">
           {visible.map((f) => {
@@ -193,23 +196,23 @@ export default function Documenten({ project, entries }) {
                     <span className="file-name">{title}</span>
                     {f.ai_title && <span className="file-origname">{f.name}</span>}
                     <span className="file-sub">
-                      {CATEGORY_LABEL[f.category] || f.category}
-                      {linked ? ` · ${linked}` : ''} · {fmtSize(f.size_bytes)} · {fmtDate(f.uploaded_at)}
-                      {f.ai_status === 'pending' && <span className="ai-badge ai-badge--pending"> · AI verwerkt…</span>}
-                      {f.ai_status === 'error' && <span className="ai-badge ai-badge--error"> · AI mislukt</span>}
+                      {CATEGORY_KEY[f.category] ? tr(CATEGORY_KEY[f.category]) : f.category}
+                      {linked ? ` · ${linked}` : ''} · {fmtSize(f.size_bytes)} · {fmtDate(f.uploaded_at, locale)}
+                      {f.ai_status === 'pending' && <span className="ai-badge ai-badge--pending"> · {tr('docs.aiPending')}</span>}
+                      {f.ai_status === 'error' && <span className="ai-badge ai-badge--error"> · {tr('docs.aiError')}</span>}
                     </span>
                   </span>
                 </button>
 
                 <div className="docrow-controls">
                   <label className="doc-link">
-                    <span className="doc-link-label">Koppel:</span>
+                    <span className="doc-link-label">{tr('docs.link')}</span>
                     <select value={f.entry_id || ''} onChange={(e) => linkEntry(f, e.target.value)}>
-                      <option value="">— Geen item —</option>
+                      <option value="">{tr('docs.noItemOption')}</option>
                       {sections.map((s) => (
-                        <optgroup key={s.id} label={s.name?.trim() || 'Sectie'}>
+                        <optgroup key={s.id} label={s.name?.trim() || tr('common.section')}>
                           {s.items.map((it) => (
-                            <option key={it.id} value={it.id}>{it.name?.trim() || 'Item'}</option>
+                            <option key={it.id} value={it.id}>{it.name?.trim() || tr('common.item')}</option>
                           ))}
                         </optgroup>
                       ))}
@@ -226,22 +229,22 @@ export default function Documenten({ project, entries }) {
                           className={`tagchip ${on ? 'tagchip--on' : ''}`}
                           style={on && t.color ? { background: t.color, borderColor: t.color } : undefined}
                           onClick={() => toggleTag(f, t.id)}
-                          title={on ? 'Tag verwijderen' : 'Tag toevoegen'}
+                          title={on ? tr('docs.removeTag') : tr('docs.addTag')}
                         >
                           {t.name}
                         </button>
                       )
                     })}
-                    {tags.length === 0 && <span className="file-sub">Maak tags aan onder Instellingen</span>}
+                    {tags.length === 0 && <span className="file-sub">{tr('docs.makeTagsHint')}</span>}
                   </span>
 
                   <button
                     type="button"
                     className="btn-ghost doc-archive-btn"
                     onClick={() => toggleArchive(f)}
-                    title={f.archived_at ? 'Terug naar actief' : 'Archiveer document'}
+                    title={f.archived_at ? tr('docs.unarchiveTitle') : tr('docs.archiveTitle')}
                   >
-                    {f.archived_at ? 'De-archiveer' : 'Archiveer'}
+                    {f.archived_at ? tr('docs.unarchive') : tr('docs.archive')}
                   </button>
                 </div>
               </div>
@@ -253,13 +256,13 @@ export default function Documenten({ project, entries }) {
       {dupPrompt && (
         <div className="modal-overlay" onClick={() => setDupPrompt(null)}>
           <div className="modal confirm" onClick={(e) => e.stopPropagation()}>
-            <h3 className="confirm-title">Mogelijk duplicaat</h3>
+            <h3 className="confirm-title">{tr('docs.dupTitle')}</h3>
             <p className="confirm-message">
-              Dit lijkt op <strong>{dupPrompt.dup.ai_title || dupPrompt.dup.name}</strong> dat je op{' '}
-              {fmtDate(dupPrompt.dup.uploaded_at)} uploadde. Toch opladen? Je kan een document later eenvoudig archiveren.
+              {tr('docs.dupPre')} <strong>{dupPrompt.dup.ai_title || dupPrompt.dup.name}</strong>{' '}
+              {tr('docs.dupPost', { date: fmtDate(dupPrompt.dup.uploaded_at, locale) })}
             </p>
             <div className="confirm-actions">
-              <button type="button" className="btn-ghost" onClick={() => setDupPrompt(null)}>Annuleren</button>
+              <button type="button" className="btn-ghost" onClick={() => setDupPrompt(null)}>{tr('common.cancel')}</button>
               <button
                 type="button"
                 className="btn-primary"
@@ -269,7 +272,7 @@ export default function Documenten({ project, entries }) {
                   doUpload(file, hash)
                 }}
               >
-                Toch opladen
+                {tr('docs.dupConfirm')}
               </button>
             </div>
           </div>

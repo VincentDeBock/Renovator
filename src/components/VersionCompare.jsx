@@ -1,15 +1,17 @@
 import { versionTotals } from '../lib/totals'
 import { formatEuroCompact, formatDeltaK } from '../lib/format'
+import { useLang } from '../i18n'
 
 // At-a-glance comparison across versions: each version's Offertes total and how
 // it sits against the shared budget. Keeps the original comparison goal alive even
 // though the table itself shows one version at a time.
 export default function VersionCompare({ versions, sections, budget }) {
+  const { t } = useLang()
   if (versions.length < 2) return null
 
   return (
-    <section className="vcompare" aria-label="Versies vergelijken">
-      <h2 className="vcompare-title">Versies vergelijken — Offertes vs budget</h2>
+    <section className="vcompare" aria-label={t('ver.compareAria')}>
+      <h2 className="vcompare-title">{t('ver.compareTitle')}</h2>
       <div className="vcompare-rows">
         {versions.map((v) => {
           const totals = versionTotals(sections, v.id)
@@ -22,7 +24,7 @@ export default function VersionCompare({ versions, sections, budget }) {
               </span>
               <span className="vcompare-amount">{formatEuroCompact(totals.offertes)}</span>
               <span className={`vcompare-delta vcompare-delta--${state}`}>
-                {formatDeltaK(delta)} vs budget
+                {formatDeltaK(delta)} {t('ver.vsBudget')}
               </span>
             </div>
           )

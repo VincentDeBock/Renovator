@@ -1,14 +1,20 @@
+import { useLang } from '../i18n'
+
 // Small confirmation modal. Render when `open` is true; calls onConfirm/onCancel.
 export default function ConfirmDialog({
   open,
-  title = 'Bevestigen',
+  title,
   message,
-  confirmLabel = 'Verwijderen',
-  cancelLabel = 'Annuleren',
+  confirmLabel,
+  cancelLabel,
   onConfirm,
   onCancel,
 }) {
+  const { t } = useLang()
   if (!open) return null
+  title = title ?? t('common.confirm')
+  confirmLabel = confirmLabel ?? t('common.delete')
+  cancelLabel = cancelLabel ?? t('common.cancel')
   return (
     <div className="modal-overlay" onClick={onCancel}>
       <div

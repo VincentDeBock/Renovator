@@ -6,10 +6,12 @@ import SectionGroup from './EntryRow'
 import ConfirmDialog from './ConfirmDialog'
 import { buildTree, projectTotals, verschil } from '../lib/totals'
 import { formatEuro } from '../lib/format'
+import { useLang } from '../i18n'
 
 const collapseKey = (pid) => `renovator.collapsed.${pid}`
 
 export default function Overzicht({ project, entries, patchEntry, removeEntry, addSection, addItem, persistOrder }) {
+  const { t } = useLang()
   const [collapsed, setCollapsed] = useState(() => {
     try {
       return new Set(JSON.parse(localStorage.getItem(collapseKey(project.id)) || '[]'))
@@ -64,18 +66,18 @@ export default function Overzicht({ project, entries, patchEntry, removeEntry, a
       <SummaryCards totals={totals} budget={project.budget} />
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <section className="table" aria-label="Budgettabel">
+        <section className="table" aria-label={t('ov.tableAria')}>
           <div className="row row--head grid">
             <div className="cell cell--drag" aria-hidden="true" />
-            <div className="cell cell--name">Sectie / item</div>
-            <div className="cell cell--amount">Offerte</div>
-            <div className="cell cell--amount">Factuur</div>
-            <div className="cell cell--amount">Verschil</div>
-            <div className="cell cell--incl">Meetellen</div>
+            <div className="cell cell--name">{t('ov.colSectionItem')}</div>
+            <div className="cell cell--amount">{t('ov.colQuote')}</div>
+            <div className="cell cell--amount">{t('ov.colInvoice')}</div>
+            <div className="cell cell--amount">{t('ov.colDiff')}</div>
+            <div className="cell cell--incl">{t('ov.colInclude')}</div>
             <div className="cell cell--actions" aria-hidden="true" />
           </div>
 
-          {sections.length === 0 && <div className="empty">Nog geen secties. Voeg er één toe om te beginnen.</div>}
+          {sections.length === 0 && <div className="empty">{t('ov.empty')}</div>}
 
           <SortableContext items={sectionIds} strategy={verticalListSortingStrategy}>
             {sections.map((section) => (
@@ -94,10 +96,10 @@ export default function Overzicht({ project, entries, patchEntry, removeEntry, a
 
           <div className="row row--total grid">
             <div className="cell cell--drag" aria-hidden="true" />
-            <div className="cell cell--name">TOTAAL</div>
-            <div className="cell cell--amount" data-label="Offerte">{formatEuro(totals.offertes)}</div>
-            <div className="cell cell--amount" data-label="Factuur">{formatEuro(totals.facturen)}</div>
-            <div className="cell cell--amount" data-label="Verschil">
+            <div className="cell cell--name">{t('ov.total')}</div>
+            <div className="cell cell--amount" data-label={t('ov.colQuote')}>{formatEuro(totals.offertes)}</div>
+            <div className="cell cell--amount" data-label={t('ov.colInvoice')}>{formatEuro(totals.facturen)}</div>
+            <div className="cell cell--amount" data-label={t('ov.colDiff')}>
               <span className={verschil(totals) < 0 ? 'amount--over' : ''}>{formatEuro(verschil(totals))}</span>
             </div>
             <div className="cell cell--incl" />
@@ -106,15 +108,15 @@ export default function Overzicht({ project, entries, patchEntry, removeEntry, a
         </section>
       </DndContext>
 
-      <button type="button" className="btn-add-section" onClick={addSection}>+ Sectie toevoegen</button>
+      <button type="button" className="btn-add-section" onClick={addSection}>{t('ov.addSection')}</button>
 
       <ConfirmDialog
         open={!!pendingDelete}
-        title={pendingDelete?.type === 'section' ? 'Sectie verwijderen' : 'Item verwijderen'}
+        title={pendingDelete?.type === 'section' ? t('ov.deleteSectionTitle') : t('ov.deleteItemTitle')}
         message={
           pendingDelete?.type === 'section'
-            ? `"${pendingDelete?.name || 'Naamloze sectie'}" en alle items erin worden verwijderd. Dit kan niet ongedaan worden gemaakt.`
-            : `"${pendingDelete?.name || 'Naamloos item'}" wordt verwijderd. Dit kan niet ongedaan worden gemaakt.`
+            ? t('ov.deleteSectionMsg', { name: pendingDelete?.name || t('common.unnamedSection') })
+            : t('ov.deleteItemMsg', { name: pendingDelete?.name || t('common.unnamedItem') })
         }
         onCancel={() => setPendingDelete(null)}
         onConfirm={() => {
